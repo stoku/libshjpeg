@@ -14,7 +14,6 @@ v2mjpeg_SOURCES = v2mjpeg.c
 v2mjpeg_LDADD = ../src/libshjpeg.la
 
 shjpegshow_SOURCES = shjpegshow.c
-shjpegshow_LDFLAGS = -L/usr/local/lib
-shjpegshow_CFLAGS = -I/usr/local/include -I/usr/local/include/directfb -I/usr/local/include/directfb-internal/
-shjpegshow_LDADD = ../src/libshjpeg.la -ldirectfb -lfusion -ldirect -lpthread -lz
+shjpegshow_CFLAGS = $(DIRECTFB_CFLAGS)
+shjpegshow_LDADD = ../src/libshjpeg.la $(DIRECTFB_LIBS) -lpthread -lz
 

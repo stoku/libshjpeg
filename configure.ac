@@ -31,6 +31,11 @@ fi
 # Checks for libraries.
 AC_CHECK_LIB([jpeg], [jpeg_std_error],, [AC_MSG_ERROR([libjpeg not found!])])
 
+dnl
+dnl Check for DirectFB
+dnl
+PKG_CHECK_MODULES(DIRECTFB, directfb >= 1.4.0)
+
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h sys/param.h stdint.h stdlib.h string.h sys/ioctl.h unistd.h jpeglib.h malloc.h])
 

@@ -10,7 +10,6 @@
 
 #include <shjpeg/shjpeg.h>
 #include "directfb.h"
-#include "core/gfxcard.h"
 
 static IDirectFB *dfb = NULL;
 
