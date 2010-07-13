@@ -12,12 +12,12 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA	 02110-1301 USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301 USA
  */
 
 #include "shjpeg_regs.h"
@@ -27,122 +27,122 @@
  */
 
 const char *jpu_reg_str[] = {
-    "JCMOD",			// 0x00
+    "JCMOD",                        // 0x00
     "JCCMD",
     "JCSTS",
     "JCQTN",
 
-    "JCHTN",			// 0x10
+    "JCHTN",                        // 0x10
     "JCDRIU",
     "JCDRID",
     "JCVSZU",
 
-    "JCVSZD",			// 0x20
+    "JCVSZD",                        // 0x20
     "JCHSZU",
     "JCHSZD",
     "JCDTCU",
 
-    "JCDTCM",			// 0x30
+    "JCDTCM",                        // 0x30
     "JCDTCD",
     "JINTE",
     "JINTS",
 
-    "JCDERR",			// 0x40
+    "JCDERR",                        // 0x40
     "JCRST",
     "-",
     "-",
 
-    "-", "-", "-", "-",		// 0x50
+    "-", "-", "-", "-",                // 0x50
 
-    "JIFCNT",			// 0x60
+    "JIFCNT",                        // 0x60
     "-", "-", "-",
 
-    "JIFECNT",			// 0x70
+    "JIFECNT",                        // 0x70
     "JIFESYA1",
     "JIFESCA1",
     "JIFESYA2",
 
-    "JIFESCA2",			// 0x80
+    "JIFESCA2",                        // 0x80
     "JIFESMW",
     "JIFESVSZ",
     "JIFESHSZ",
-		
-    "JIFEDA1",			// 0x90
+                
+    "JIFEDA1",                        // 0x90
     "JIFEDA2",
     "JIFEDRSZ", "-",
-		
-    "JIFDCNT",			// 0xa0
+                
+    "JIFDCNT",                        // 0xa0
     "JIFDSA1",
     "JIFDSA2",
     "JIFDDRSZ",
 
-    "JIFDDMW",			// 0xb0
+    "JIFDDMW",                        // 0xb0
     "JIFDDVSZ",
     "JIFDDHSZ",
     "JIFDDYA1",
-		
-    "JIFDDCA1",			// 0xc0
+                
+    "JIFDDCA1",                        // 0xc0
     "JIFDDYA2",
     "JIFDDCA2", "-",
 };
 
 const char *veu_reg_str[] = {
-    "VESTR",		// 0x000
+    "VESTR",                // 0x000
     "-",
     "-",
     "-",
 
-    "VESWR",		// 0x010
+    "VESWR",                // 0x010
     "VESSR",
     "VSAYR",
     "VSACR",
 
-    "VBSSR",		// 0x020
+    "VBSSR",                // 0x020
     "-",
     "-",
     "-",
 
-    "VEDWR",		// 0x030
+    "VEDWR",                // 0x030
     "VDAYR",
     "VDACR",
     "-",
 
-    "-",		// 0x040
+    "-",                // 0x040
     "-",
     "-",
     "-",
 
-    "VTRCR",		// 0x050
+    "VTRCR",                // 0x050
     "VRFCR",
     "VRFSR",
     "VENHR",
 
-    "-",		// 0x060
+    "-",                // 0x060
     "-",
     "-",
     "-",
 
-    "VFMCR",		// 0x070
+    "VFMCR",                // 0x070
     "VVTCR",
     "VHTCR",
     "-",
 
-    "VAPCR",		// 0x080
+    "VAPCR",                // 0x080
     "VECCR",
     "-",
     "-",
 
-    "VAFXR",		// 0x090
+    "VAFXR",                // 0x090
     "VSWPR",
     "-",
     "-",
 
-    "VEIER",		// 0x0a0
+    "VEIER",                // 0x0a0
     "VEVTR",
     "-",
     "-",
 
-    "VSTAR",		// 0x0b0
+    "VSTAR",                // 0x0b0
     "VBSRR",
     "-",
     "-"
