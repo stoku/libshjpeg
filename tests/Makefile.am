@@ -15,5 +15,5 @@ v2mjpeg_LDADD = ../src/libshjpeg.la
 
 shjpegshow_SOURCES = shjpegshow.c
 shjpegshow_CFLAGS = $(DIRECTFB_CFLAGS)
-shjpegshow_LDADD = ../src/libshjpeg.la $(DIRECTFB_LIBS) -lpthread -lz
+shjpegshow_LDADD = ../src/libshjpeg.la $(DIRECTFB_LIBS)
 
