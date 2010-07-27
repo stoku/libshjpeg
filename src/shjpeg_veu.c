@@ -105,10 +105,10 @@ int shjpeg_veu_init(shjpeg_internal_t *data, shjpeg_veu_t *veu)
     /* 
      * 4. VEU3F work around
      */
-    if (data->uio_caps & UIO_CAPS_VEU3F) {
+//    if (data->uio_caps & UIO_CAPS_VEU3F) {
 //	shjpeg_veu_setreg32(data, VEU_VRPBR, 0x00000000);
 	shjpeg_veu_setreg32(data, VEU_VRPBR, 0x00400040);
-    }
+//    }
 
     /*
      * 5. Enable interrupt
@@ -124,7 +124,7 @@ int shjpeg_veu_init(shjpeg_internal_t *data, shjpeg_veu_t *veu)
 
 void shjpeg_veu_set_dst_jpu(shjpeg_internal_t *data)
 {
-#ifdef SHJPEG_DEBUG
+#ifdef SHJPEG_DEBUG1
     u32 vdayr = shjpeg_veu_getreg32(data, VEU_VDAYR);
     u32 vdacr = shjpeg_veu_getreg32(data, VEU_VDACR);
 #endif
@@ -138,7 +138,7 @@ void shjpeg_veu_set_dst_jpu(shjpeg_internal_t *data)
 			shjpeg_jpu_getreg32(data, JPU_JIFESCA2) :
 			shjpeg_jpu_getreg32(data, JPU_JIFESCA1));
     
-#ifdef SHJPEG_DEBUG
+#ifdef SHJPEG_DEBUG1
     D_INFO("		-> SWAP, "
 	   "VEU_VSAYR = %08x (%08x->%08x, %08x->%08x)",
 	   shjpeg_veu_getreg32(data, VEU_VSAYR), vdayr,

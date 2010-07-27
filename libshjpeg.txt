@@ -1,0 +1,120 @@
+Version 1.3
+===========
+
+New libjpeg combatibility introduced.
+
+Using this version of libshjpeg with the libjpeg combatibility enabled will
+allow programs designed for use with libjpeg to transparently use the hardware
+acceleration capabilities of Renesas's SH7772/4 SoC provided JPU
+(Jpeg Processing Unit).  The application and system requirements are listed below.
+
+libjpeg Licencing
+=================
+With the addition of libjpeg compatibitly, this software is based in part on
+the work of the Independent JPEG Group.  No source files from the libjpeg
+library are distrubuted with this software although they are necessary for
+compilation of a libjpeg compatable libshjpeg.
+
+Application Requirements
+========================
+
+No application code needs to be changed, however, the application must be
+re-linked to use this library instead of libjpeg (i.e. change -ljpeg to
+-lshjpeg in your compilation scripts)
+
+Build System Requirements
+=========================
+
+In order to sucessfully create the libjpeg wrapper, then build system should
+have a copy of the libjpeg source for the version than you wish to use on the
+target system.
+
+Target System Requirements
+==========================
+
+Since this library will automatically fall back to use libjpeg functions when
+the hardware acceleration cannot handle the conversion, a working version of
+libjpeg must exist on the target system as a SHARED library. In particular,
+for libjpeg version 6b, this means configureing your build with
+	./configure --enable-shared
+before compiling.
+
+Compilation
+===========
+
+ * Set the environment variable LIBJPEG_INC_PATH to the directory containting
+   the libjpeg source files for the version that you want to use.
+
+ * execute 'gen/genapi' to create the libjpeg compatible API based on the
+   libjpeg version sepcified in LIBJPEG_INC_PATH
+
+ * execute 'autoreconf -vif' to generate a configure file
+
+ * execute 'configure' with any desired options.  The libjpeg compatible
+   interface will be compiled if the variable of LIBJPEG_INC_PATH is set.
+   Alternatively this value can be specified with the configure option
+   --enable/--diable-jpeg-wrapper
+ * execute 'make' to build the library and test programs
+
+   *NOTE: when compiling with some versions of libjpeg a compile time error
+    stating that HAVE_STDLIB_H is redifined may occur.  This is a bug in the
+    libjpeg library and has been corrected on recent versions.  This problem
+    can be solved by changing the definition in jconfig.h to
+    #define HAVE_STDLIB_H 1
+
+Features
+========
+The libshjpeg library can decode to and encode from buffers with the following standard libjpeg colour coding
+
+     * JCS_RGB24
+     * JCS_GRAYSCALE (coming soon - maybe)
+     * JCS_YCrCb (coming soon)
+
+Additionally the following non-standard libjpeg formats are supported
+     * JCS_RGB565 (on Android)
+     * JCS_RGBA888 (on Android)
+
+As well as the following when using the direct hardware interface
+     * NV12
+     * NV16
+
+Usage
+=====
+ * libshjpeg has two interfaces to the acess the JPU.  The traditional
+   interface (available until version 1.2) remains, and can be used directly.
+   The libjpeg compatible version shouldn't require any modification to any
+   code that currently runs using libjpeg.  There are however, some limitations
+   when in using the libjpeg compatible interface.  These are detailed in the
+   next section.
+
+Limitations
+===========
+
+ * No parallel processing -  Only one JPEG can be compressed/decompressed
+   at a time.
+	This means that once a call to 'jpeg_start_decompress' or
+	'jpeg_start_compress' is issued using a given cinfo context, no other
+	library calls can be made using a different context until the first
+	compression/decompression cycle is completed with a call to
+	'jpeg_finish_decompress'/'jpeg_finish_compress', 'jpeg_abort', or
+	'jpeg_destroy'
+
+ * libjpeg virtual array mechanism not supported.
+	The major effect of this is that scanline order would have to be
+	manually reversed in order to change the image data from top-to-
+	bottom order to bottom-to-top order.
+
+ * forcing colour and quality conversion on output.
+	Currently, output JPEGs are always generated in YCrCb color format.
+	There is no support to force color data to grayscale output yet.
+	Likewise all output compression level cannot be adjusted.
+
+Errors, Warnings, Information messages
+======================================
+
+The libjpeg interface of libshjpeg adds its information messages to the same
+mechanism used for libjpeg.  Messages are delivered either through jpeg_std_error
+the user specified error handler in the same way that libjpeg messages are.
+Trace messages are dispatched at error message level 1 by default.
+The direct JPU aceess interface delivers messages to stderr.
+

@@ -1,0 +1,65 @@
+#!/usr/bin/perl
+$apidir = "../src/libjpeg_wrap/libjpeg_api";
+mkdir $apidir
+	or die "Cannot create api directory: $!" unless -d $apidir;
+foreach $infile (@ARGV) {
+	open (INFILE, "< $infile") or die "Cannot open $infile for reading";
+	$infile =~ s/.*\/([^\/]+$)/$1/;
+	$base = $infile;
+	$base =~ s/\.h$//;
+	open (APIENT, "> ./temp/$base.in")
+		or die "Cannot open $base.in for writing: $!";
+	open (APIC, "> ../src/libjpeg_wrap/libjpeg_api/$base.c")
+		or die "Cannot open $base.c for writing: $!";
+	print APIC "#include \"libjpeg_wrap/hooks.h\"\n";
+	print APIC "extern hooks_t *active_hooks;\n";
+	while(<INFILE>) {
+		if (/^EXTERN\((.+)\)\s+(.*)/) {
+			print "$1:";
+			$rettype = $1;
+			$fs = $2;
+			if ($2 !~ /;\s*$/) {
+				$readagain = 1;
+				while ($readagain) {
+					$fs =~ s/\s+$//;
+					$next = <INFILE>;
+					$next =~ s/^\s+//;
+					$fs = $fs . " " . $next;
+					if ($fs =~ /;\s*$/) {
+						$readagain = 0;
+					}
+				}
+			}
+			$fs =~ s/\s+$//;
+			$fs =~ m/(\S+)\s*JPP\s*\(\((.*)\)\)/;
+			$fname = $1;
+		        $args = $2;
+			print "$fname:$args\n";
+			@args = split ',', $args;
+			print APIENT "SHLIBJPEG_API($rettype, $fname";
+			print APIC "$rettype $fname($args) {\n";
+
+			if ($rettype =~ m/^\s*void\s*$/) {
+				print APIC "\tCALL_API_FUNC($fname,";
+			} else {
+				print APIC "\tCALL_RETURN_API_FUNC($fname,";
+			}
+
+			$arglist = "";
+			foreach $entry (@args)  {
+				if ($entry =~ m/\s*(.*\s+\**)(\S+)/) {
+					$argtype = $1;
+					$argname = $2;
+				} else {
+					$argtype = "void";
+					$argname = "";
+				}
+				$arglist = $arglist . $argname . ", ";
+				print APIENT ", $argtype";
+			}
+			$arglist =~ s/, $/)/;
+			print APIC "$arglist\n}\n";
+			print APIENT ")\n";
+		}
+	}
+}

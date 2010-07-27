@@ -5,7 +5,7 @@
 AM_CFLAGS = -Wall -Werror
 AM_CPPFLAGS = -I$(top_srcdir)/include
 
-bin_PROGRAMS = shjpegtest v2mjpeg shjpegshow
+bin_PROGRAMS = shjpegtest v2mjpeg shjpegshow libjpegtest
 
 shjpegtest_SOURCES = shjpegtest.c
 shjpegtest_LDADD = ../src/libshjpeg.la
@@ -18,3 +18,5 @@ shjpegshow_LDFLAGS = -L/usr/local/lib
 shjpegshow_CFLAGS = -I/usr/local/include -I/usr/local/include/directfb -I/usr/local/include/directfb-internal/
 shjpegshow_LDADD = ../src/libshjpeg.la -ldirectfb -lfusion -ldirect -lpthread -lz
 
+libjpegtest_SOURCES = libjpeg_test.c
+libjpegtest_LDADD = ../src/libshjpeg.la

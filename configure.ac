@@ -10,6 +10,19 @@ AC_CONFIG_SRCDIR([src/shjpeg_decode.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
+AC_ARG_ENABLE([jpeg-wrapper],
+	AS_HELP_STRING([--enable-jpeg-wrapper=<path>],
+		[enable shjpeg to support the libjpeg API.]),
+		[if test x$enableval = xno; then
+			LIBJPEG_INC_PATH=
+		else
+			LIBJPEG_INC_PATH=$enableval
+		fi])
+
+AM_CONDITIONAL(MAKE_JPEG_WRAPPER, test x$LIBJPEG_INC_PATH != x)
+
+AC_SUBST([LIBJPEG_INC_PATH])
+
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 
@@ -29,8 +42,12 @@ if test $HAVE_DOXYGEN = "false"; then
 fi
 
 # Checks for libraries.
-AC_CHECK_LIB([jpeg], [jpeg_std_error],, [AC_MSG_ERROR([libjpeg not found!])])
-
+if test x$LIBJPEG_INC_PATH = x ; then
+	AC_CHECK_LIB([jpeg], [jpeg_std_error],, [AC_MSG_ERROR([libjpeg not found!])])
+else
+	AC_CHECK_LIB([dl], [dlopen],, [AC_MSG_ERROR([libdl not found!])])
+	AC_DEFINE(LIBJPEG_WRAPPER_SUPPORT, 1, [Indicate support of libjpeg wrapper])
+fi
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h sys/param.h stdint.h stdlib.h string.h sys/ioctl.h unistd.h jpeglib.h malloc.h])
 
@@ -48,7 +65,7 @@ AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
 
 # Checks for library functions.
-AC_FUNC_MALLOC
+#AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_CHECK_FUNCS([getpagesize memset munmap strerror])
 

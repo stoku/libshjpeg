@@ -432,9 +432,6 @@ shjpeg_init(int verbose)
 void
 shjpeg_shutdown(shjpeg_context_t *context)
 {
-    /* shutdown uio */
-    uio_shutdown(&data);
-
     /* clean up */
     if (context)
 	free(context);
@@ -444,6 +441,9 @@ shjpeg_shutdown(shjpeg_context_t *context)
 
     if (--data.ref_count)
 	goto quit;
+
+    /* shutdown uio */
+    uio_shutdown(&data);
 
 quit:
     return;

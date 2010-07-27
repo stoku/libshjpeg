@@ -27,7 +27,7 @@
 #include <stdint.h>
 
 #include <jpeglib.h>
-
+#include "config.h"
 /**
  * \file shjpeg_types.h
  *
@@ -93,11 +93,13 @@
  */
 
 typedef enum {
+    SHJPEG_PF_NONE = 0,                                         /*!< No format - Error placeholder*/
     SHJPEG_PF_RGB16 = SHJPEG_PIXELFORMAT(1, 2, 16, 2),		/*!< RGB16 pixel format. */
     SHJPEG_PF_RGB24 = SHJPEG_PIXELFORMAT(2, 3, 24, 2),		/*!< RGB24 pixel format. */
     SHJPEG_PF_RGB32 = SHJPEG_PIXELFORMAT(3, 4, 32, 2),		/*!< RGB32 pixel format. */
     SHJPEG_PF_NV12  = SHJPEG_PIXELFORMAT(4, 1, 12, 3),		/*!< NV12 pixel format. */
     SHJPEG_PF_NV16  = SHJPEG_PIXELFORMAT(5, 1, 16, 4),		/*!< NV16 pixel format. */
+    SHJPEG_PF_GRAYSCALE = SHJPEG_PIXELFORMAT(6, 1, 12, 3),	/*!< Y8 pixel format. */
 } shjpeg_pixelformat;
 
 /**
@@ -158,6 +160,32 @@ typedef struct shjpeg_context_struct shjpeg_context_t;
  * is stored in this structure.
  */
 
+/**
+ * \brief JPU data buffer information
+ *
+ * This structure stores the physical and virtual address
+ * of the buffer that is used for JPEG encode/decode on the
+ * JPU.
+ */
+
+struct shjpeg_buffer {
+    void                *buffer;
+    unsigned long       phys;
+    size_t              size;
+};
+
+#ifdef LIBJPEG_WRAPPER_SUPPORT
+typedef struct {
+        boolean (*fill_buffer_function) (j_decompress_ptr cinfo);
+        void *buffer_cache;
+        void *current_start;
+        int last_buffer_size;
+        int total_buffer_size;
+	void *cache_read;
+	void *current_read;
+} buffer_cache_context_t;
+#endif
+
 struct shjpeg_context_struct {
     //! Width of the current image.
     int		width;
@@ -192,6 +220,26 @@ struct shjpeg_context_struct {
     struct jpeg_compress_struct    jpeg_comp;
     //! libshjpeg private data - libjpeg compress context
     struct jpeg_decompress_struct  jpeg_decomp;
+
+//New for 1.3
+    //! Pitch of the current image.
+    int         pitch;
+    //! the working buffer for JPEG encode/decode
+    struct shjpeg_buffer buffer;
+
+#ifdef LIBJPEG_WRAPPER_SUPPORT
+   /*! private data -
+        currently active compression object*/
+    j_common_ptr active_object;
+
+   /*! private data -
+        input buffer cache*/
+    buffer_cache_context_t *cache_con;
+
+   /*! True if the image to be compressed or decompressed is grayscale*/
+
+
+#endif
 };
 
 #endif /* !__shjpeg_types_h__ */

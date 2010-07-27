@@ -18,3 +18,7 @@ v2mjpeg	      - Encode V4L2 input, and stream as multipart/x-mixed-replace.
 
 mjpeg2jpeg.pl - Retrieve v2mjpeg/sighttpd output via http, and stores as
 		individual JPEG files.
+
+libjpegtest   - Decode and then encode a JPEG file using the libjpeg interface.
+
+See libshjpeg.txt for more details about the library
