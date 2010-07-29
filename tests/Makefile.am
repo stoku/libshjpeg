@@ -4,6 +4,9 @@
 #
 AM_CFLAGS = -Wall -Werror
 AM_CPPFLAGS = -I$(top_srcdir)/include
+if MAKE_JPEG_WRAPPER
+AM_CPPFLAGS +=	-I$(LIBJPEG_INC_PATH)
+endif
 
 bin_PROGRAMS = shjpegtest v2mjpeg shjpegshow libjpegtest
 
