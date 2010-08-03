@@ -30,8 +30,10 @@ decompress_jpeg_file(char *input, unsigned char **buffer, int verbose, int stdio
 	FILE *infile = fopen(input, "rb");
 	struct jpeg_decompress_struct cinfo;
 	struct jpeg_error_mgr jerr;
-	unsigned char *membuf = NULL;
 	JSAMPROW scan_line[1];
+#if JPEG_LIB_VERSION >= 80
+	unsigned char *membuf = NULL;
+#endif
 
 	if (!infile) {
 		fprintf(stderr, "Cannot open input file %s\n", input);
@@ -45,7 +47,9 @@ decompress_jpeg_file(char *input, unsigned char **buffer, int verbose, int stdio
 	jpeg_create_decompress(&cinfo);
 	if (stdio_src) {
 		jpeg_stdio_src(&cinfo, infile);
-	} else {
+	} 
+#if JPEG_LIB_VERSION >= 80
+	else {
 		struct stat st;
 		stat(input, &st);
 		membuf = malloc(st.st_size);
@@ -56,6 +60,7 @@ decompress_jpeg_file(char *input, unsigned char **buffer, int verbose, int stdio
 		fclose(infile);
 		jpeg_mem_src(&cinfo, membuf, st.st_size);
 	}
+#endif 
 
 	jpeg_read_header(&cinfo, TRUE);
 	jpeg_calc_output_dimensions(&cinfo);
@@ -78,9 +83,10 @@ decompress_jpeg_file(char *input, unsigned char **buffer, int verbose, int stdio
 
 	if (stdio_src)
 		fclose(infile);
+#if JPEG_LIB_VERSION >= 80
 	else
 		free(membuf);
-
+#endif
 	return 0;
 }
 void
@@ -100,9 +106,11 @@ compress_jpeg_file(char *output, unsigned char *buffer, int verbose, int stdio_s
 	FILE *outfile;
 	struct jpeg_compress_struct cinfo;
 	struct jpeg_error_mgr jerr;
-	unsigned char *membuf = NULL;
-	unsigned long buflen = 0;
 	JSAMPROW scan_line[1];
+#if JPEG_LIB_VERSION >= 80
+	unsigned long buflen = 0;
+	unsigned char *membuf = NULL;
+#endif 
 	outfile = fopen (output, "wb");
 	if (!outfile) {
 		fprintf(stderr, "Cannot open output file %s\n", output);
@@ -115,9 +123,12 @@ compress_jpeg_file(char *output, unsigned char *buffer, int verbose, int stdio_s
 	jpeg_create_compress(&cinfo);
 	if (stdio_src) {
 		jpeg_stdio_dest(&cinfo, outfile);
-	} else {
+	} 
+#if JPEG_LIB_VERSION >= 80
+	else {
 		jpeg_mem_dest(&cinfo, &membuf, &buflen);
 	}
+#endif
 
 	cinfo.image_width = width;
 	cinfo.image_height = height;
@@ -133,9 +144,11 @@ compress_jpeg_file(char *output, unsigned char *buffer, int verbose, int stdio_s
 	}
 	jpeg_finish_compress(&cinfo);
 	jpeg_destroy_compress(&cinfo);
+#if JPEG_LIB_VERSION >= 80
 	if (!stdio_src) {
 		fwrite(membuf, 1, buflen, outfile);
 	}
+#endif
 	fclose(outfile);
 	return 0;
 }
@@ -153,9 +166,12 @@ print_usage(char *argv0) {
 	    "  -q, --quiet	           no messages from this program.\n"
 	    "  -d[<ppm>], --dump[=<ppm>]   dump decoded image in PPM (default: test.ppm).\n"
 	    "  -r<times>, --repeat=<times> reconvert the data n times to look for cumulative effects\n"
-	    "  -t<file>, --tmpfile=<file>  temporary file to use for reconversions\n"
+	    "  -t<file>, --tmpfile=<file>  temporary file to use for reconversions\n");
+#if JPEG_LIB_VERSION >= 80
+    fprintf(stderr,
 	    "  -m, --mem 		   use jpeg_mem_* as data source and destination\n"
 	    "  -s, --stdio                 use jpeg_stdio_* as data src/dest (default)\n");
+#endif 
 }
 
 int
