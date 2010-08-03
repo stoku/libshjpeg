@@ -66,7 +66,9 @@ void __attribute__ ((constructor)) init_lib (void) {
 		RTLD_NOW | RTLD_LOCAL);
 
 	if (!lib_handle) {
-		printf("cannot open library\n");
+		printf("cannot open shared libjpeg library library: %s\n",
+			"libjpeg.so");
+		exit(-1);
 	}
 	*fn_handle = *wjpu_handle = *jpumode_handle = &libjpeg_unimplented;
 	fn_handle++;
