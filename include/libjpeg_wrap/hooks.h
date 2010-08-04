@@ -12,12 +12,12 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA	 02110-1301 USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA  02110-1301 USA
  */
 
 #ifndef HOOKS_H
@@ -32,13 +32,13 @@
 #define SHLIBJPEG_API(ret, func, ...) ret (*func)(__VA_ARGS__);
 
 typedef struct {
-	SHLIBJPEG_API(void, unimplemented, void);
-	#include "entries.in"
+    SHLIBJPEG_API(void, unimplemented, void);
+    #include "entries.in"
 } hooks_t;
 #undef SHLIBJPEG_API
 
 #define CALL_RETURN_API_FUNC(_func, ...) \
-		return active_hooks->_func(__VA_ARGS__);
+        return active_hooks->_func(__VA_ARGS__);
 
 #define CALL_API_FUNC(_func, ...) active_hooks->_func(__VA_ARGS__);
 

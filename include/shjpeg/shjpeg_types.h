@@ -35,7 +35,7 @@
  */
 
 //! Use default physically contigous buffer
-#define SHJPEG_USE_DEFAULT_BUFFER	0xffffffffUL
+#define SHJPEG_USE_DEFAULT_BUFFER   0xffffffffUL
 
 /**
  * \brief Encodes pixelformat
@@ -48,13 +48,13 @@
  * \param mul  a multiplier for planes calculation (units of 1/2 plane)
  */
 
-#define SHJPEG_PIXELFORMAT(id, pitch, bpp, mul)		\
+#define SHJPEG_PIXELFORMAT(id, pitch, bpp, mul)     \
     ((((id) & 0xffff) << 24) | (((pitch) & 0xff) << 16) | (((bpp) &   0xff) <<  8) | \
      ((mul)  &   0xff))
 
 /**
  * \brief Decodes pixelformat - pitch multiplier
- * 
+ *
  * Decodes multiplier used to calculate line pitch. Multiply width
  * by this value gives line pitch.
  *
@@ -65,7 +65,7 @@
 
 /**
  * \brief Decodes pixelformat - bits-per-pixel
- * 
+ *
  * Decodes bits per pixel.
  *
  * \param format the pixelformat
@@ -75,7 +75,7 @@
 
 /**
  * \brief Decodes pixelformat - plane multiplier
- * 
+ *
  * Decodes multiplier used to calculate the total height of the plane.
  * SHJPEG_PF_PLANE_MULTIPLY(pf, height) x SHJPEG_PF_PITCH_MULTIPLY(pf) x width x SHJPEG_PF_BPP(pf) / 8
  * gives you the total number of bytes required to hold the plane.
@@ -94,12 +94,12 @@
 
 typedef enum {
     SHJPEG_PF_NONE = 0,                                         /*!< No format - Error placeholder*/
-    SHJPEG_PF_RGB16 = SHJPEG_PIXELFORMAT(1, 2, 16, 2),		/*!< RGB16 pixel format. */
-    SHJPEG_PF_RGB24 = SHJPEG_PIXELFORMAT(2, 3, 24, 2),		/*!< RGB24 pixel format. */
-    SHJPEG_PF_RGB32 = SHJPEG_PIXELFORMAT(3, 4, 32, 2),		/*!< RGB32 pixel format. */
-    SHJPEG_PF_NV12  = SHJPEG_PIXELFORMAT(4, 1, 12, 3),		/*!< NV12 pixel format. */
-    SHJPEG_PF_NV16  = SHJPEG_PIXELFORMAT(5, 1, 16, 4),		/*!< NV16 pixel format. */
-    SHJPEG_PF_GRAYSCALE = SHJPEG_PIXELFORMAT(6, 1, 12, 3),	/*!< Y8 pixel format. */
+    SHJPEG_PF_RGB16 = SHJPEG_PIXELFORMAT(1, 2, 16, 2),      /*!< RGB16 pixel format. */
+    SHJPEG_PF_RGB24 = SHJPEG_PIXELFORMAT(2, 3, 24, 2),      /*!< RGB24 pixel format. */
+    SHJPEG_PF_RGB32 = SHJPEG_PIXELFORMAT(3, 4, 32, 2),      /*!< RGB32 pixel format. */
+    SHJPEG_PF_NV12  = SHJPEG_PIXELFORMAT(4, 1, 12, 3),      /*!< NV12 pixel format. */
+    SHJPEG_PF_NV16  = SHJPEG_PIXELFORMAT(5, 1, 16, 4),      /*!< NV16 pixel format. */
+    SHJPEG_PF_GRAYSCALE = SHJPEG_PIXELFORMAT(6, 1, 12, 3),  /*!< Y8 pixel format. */
 } shjpeg_pixelformat;
 
 /**
@@ -129,7 +129,7 @@ struct shjpeg_stream_ops_struct {
       \param [in] dataptr a pointer to the buffer to be filled.
       \return should return 0 if success, otherwise non-zero value.
      */
-    int	(*read)(void *private, size_t *nbytes, void *dataptr);
+    int (*read)(void *private, size_t *nbytes, void *dataptr);
 
     //! A method to write JPEG data.
     /*!
@@ -138,7 +138,7 @@ struct shjpeg_stream_ops_struct {
       \param [in] dataptr a pointer to the buffer to be writen.
       \return should return 0 if success, otherwise non-zero value.
      */
-    int	(*write)(void *private, size_t *nbytes, void *dataptr);
+    int (*write)(void *private, size_t *nbytes, void *dataptr);
 
     //! A method to finalize JPEG data.
     /*!
@@ -155,7 +155,7 @@ typedef struct shjpeg_context_struct shjpeg_context_t;
 
 /**
  * \brief JPEG Compressoin/Decompression Context
- * 
+ *
  * When the file to be decoed is opened, the details of the JPEG files
  * is stored in this structure.
  */
@@ -181,41 +181,41 @@ typedef struct {
         void *current_start;
         int last_buffer_size;
         int total_buffer_size;
-	void *cache_read;
-	void *current_read;
+    void *cache_read;
+    void *current_read;
 } buffer_cache_context_t;
 #endif
 
 struct shjpeg_context_struct {
     //! Width of the current image.
-    int		width;
+    int     width;
 
     //! Height of the current image.
-    int		height;
+    int     height;
 
     //! True if the image is YUV420 (valid during decode only).
-    bool	mode420;
+    bool    mode420;
 
     //! True if the image is YUV444 (valid during decode only).
-    bool	mode444;
+    bool    mode444;
 
     //! Stream operations
-    shjpeg_sops	*sops;
+    shjpeg_sops *sops;
 
     //! User defined private data
-    void	*private;
+    void    *private;
 
     //! libshjpeg private data
-    void	*internal_data;
+    void    *internal_data;
 
     //! Set to non-zero, if fallback to libjpeg is NOT desired.
-    int		 libjpeg_disabled;
+    int      libjpeg_disabled;
 
     //! libshjpeg set this to non-zero, if decoding falled back to libjpeg.
-    int		 libjpeg_used;
+    int      libjpeg_used;
 
     //! libshjpeg private data - verbose flag
-    int		 verbose;
+    int      verbose;
     //! libshjpeg private data - libjpeg compress context
     struct jpeg_compress_struct    jpeg_comp;
     //! libshjpeg private data - libjpeg compress context
