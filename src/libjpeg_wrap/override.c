@@ -181,6 +181,8 @@ boolean shjpeg_start_decompress(j_decompress_ptr cinfo) {
 		SHJPEG_USE_DEFAULT_BUFFER, context->width,
 		context->height, context->pitch) < 0) {
 		//this is not a recoverable failure... abort
+		shjpeg_decode_shutdown(context);
+		shjpeg_shutdown(context);
 		return libjpeg_hooks.jpeg_start_decompress(cinfo);
 	}
 	context->active_object = (j_common_ptr) cinfo;
@@ -212,6 +214,9 @@ boolean shjpeg_finish_decompress(j_decompress_ptr cinfo) {
 	if ((j_common_ptr)cinfo != context->active_object) {
 		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
 	}
+    if (context->sops->finalize) {
+		context->sops->finalize(context->private);
+    }
 	context->active_object = NULL;
 	active_hooks = &withjpu_hooks;
 	CALL_API_FUNC(jpeg_abort_decompress, cinfo)
@@ -310,6 +315,9 @@ void shjpeg_finish_compress(j_compress_ptr cinfo) {
 		context->height, context->pitch) < 0) {
 		ERREXIT(cinfo, SHJMSG_COMPRESS_ERR);
 	}
+    if (context->sops->finalize) {
+		context->sops->finalize(context->private);
+    }
 	active_hooks = &withjpu_hooks;
 }
 
