@@ -255,6 +255,7 @@ encode_hw(shjpeg_internal_t	*data,
 		ptr = (void*)data->jpeg_virt + (i-1) * SHJPEG_JPU_RELOAD_SIZE;
 		len = amount;
 		context->sops->write(context->private, &len, ptr);
+		written += len;
 	    }
 	}
 
