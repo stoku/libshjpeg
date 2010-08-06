@@ -12,12 +12,12 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA  02110-1301 USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA	 02110-1301 USA
  */
 
 #include <stdio.h>
@@ -26,16 +26,16 @@
 #undef SHLIBJPEG_API
 #define SHLIBJPEG_API(ret, func, ...) #func,
 char const * const hook_names[] = {
-    #include "libjpeg_wrap/entries.in"
-    NULL
+	#include "libjpeg_wrap/entries.in"
+	NULL
 };
 #undef SHLIBJPEG_API
 
 void libjpeg_unimplented (void) {
-    fprintf(stderr, "Unimplented library call atttmepted\n");
+	fprintf(stderr, "Unimplented library call atttmepted\n");
 }
 void jpumode_error (void) {
-    fprintf(stderr, "State error.  Complete current JPEG before\n"
-                "attempting to start a new conversion\n");
+	fprintf(stderr, "State error.  Complete current JPEG before\n"
+		        "attempting to start a new conversion\n");
 }
 

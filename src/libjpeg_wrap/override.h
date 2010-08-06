@@ -12,21 +12,21 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA  02110-1301 USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA	 02110-1301 USA
  */
 
 #include "libjpeg_wrap/hooks.h"
 #include "shjpeg/shjpeg_types.h"
 
 typedef struct {
-    j_common_ptr cinfo;
-    shjpeg_context_t *context;
-    buffer_cache_context_t *cache_con;
+	j_common_ptr cinfo;
+	shjpeg_context_t *context;
+	buffer_cache_context_t *cache_con;
 } cinfo_context;
 
 /*With libjpeg functions

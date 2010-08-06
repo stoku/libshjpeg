@@ -12,12 +12,12 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA  02110-1301 USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA	 02110-1301 USA
  */
 
 #include <stdio.h>
@@ -43,11 +43,11 @@ boolean cache_input_buffer (j_decompress_ptr cinfo);
 /*extracted from jdatasrc.c in libjpeg 8b*/
   /* Expanded data source object for stdio input */
 typedef struct {
-    struct jpeg_source_mgr pub;   /* public fields */
+  struct jpeg_source_mgr pub;   /* public fields */
 
-    FILE * infile;                /* source stream */
-    JOCTET * buffer;              /* start of buffer */
-    boolean start_of_file;        /* have we gotten any data yet? */
+  FILE * infile;                /* source stream */
+  JOCTET * buffer;              /* start of buffer */
+  boolean start_of_file;        /* have we gotten any data yet? */
 } my_source_mgr;
 
 typedef my_source_mgr * my_src_ptr;
@@ -57,10 +57,10 @@ typedef my_source_mgr * my_src_ptr;
   /* Expanded data destination object for stdio output */
 
 typedef struct {
-    struct jpeg_destination_mgr pub; /* public fields */
+  struct jpeg_destination_mgr pub; /* public fields */
 
-    FILE * outfile;               /* target stream */
-    JOCTET * buffer;              /* start of buffer */
+  FILE * outfile;               /* target stream */
+  JOCTET * buffer;              /* start of buffer */
 } my_destination_mgr;
 
 typedef my_destination_mgr * my_dest_ptr;

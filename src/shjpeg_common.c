@@ -12,12 +12,12 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA  02110-1301 USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA	 02110-1301 USA
  */
 
 #include <stdio.h>
@@ -42,15 +42,15 @@
 
 /* open file, read bytes and then close */
 static int
-uio_readfile(shjpeg_context_t *context,
-         const char *path, size_t n, char *buffer)
+uio_readfile(shjpeg_context_t *context, 
+	     const char *path, size_t n, char *buffer)
 {
     FILE *fp;
 
     /* open file */
     if ((fp = fopen( path, "r" )) == NULL) {
-    D_PERROR("libshjpeg: Can't open %s!", path);
-    return -1;
+	D_PERROR("libshjpeg: Can't open %s!", path);
+	return -1;
     }
 
     /* clear buffer */
@@ -58,8 +58,8 @@ uio_readfile(shjpeg_context_t *context,
 
     /* read content */
     if (!fgets( buffer, n, fp)) {
-    D_PERROR("libshjpeg: Can't read %d counts from %s.", n, path);
-    return -1;
+	D_PERROR("libshjpeg: Can't read %d counts from %s.", n, path);
+	return -1;
     }
 
     fclose(fp);
@@ -72,9 +72,9 @@ uio_readfile(shjpeg_context_t *context,
  */
 
 static int
-uio_open_dev(shjpeg_context_t   *context,
-         const char             *name,
-         int                    *uio_num)
+uio_open_dev(shjpeg_context_t 	*context, 
+	     const char 	*name, 
+	     int 		*uio_num)
 {
     char path[MAXPATHLEN];
     int found = 0, uio_fd, i, len;
@@ -83,29 +83,29 @@ uio_open_dev(shjpeg_context_t   *context,
     /* search uio that has given name */
     len = strlen(name);
     for(i = 0; i < data->uio_count; i++) {
-        if (!strncmp(name, data->uio_device[i], len)) {
-            sscanf(data->uio_dpath[i], "/sys/class/uio/uio%i", uio_num);
-            found = 1;
+	if (!strncmp(name, data->uio_device[i], len)) {
+	    sscanf(data->uio_dpath[i], "/sys/class/uio/uio%i", uio_num);
+	    found = 1;
 
-            /*
-            * Set a flag if we have VEU3F.
-             * XXX: we need to find better place to do this...
-            */
-            if (!strncmp(data->uio_device[i], "VEU3F", 5))
-                data->uio_caps |= UIO_CAPS_VEU3F;
+	    /*
+	     * Set a flag if we have VEU3F.
+	     * XXX: we need to find better place to do this...
+	     */
+	    if (!strncmp(data->uio_device[i], "VEU3F", 5))
+		data->uio_caps |= UIO_CAPS_VEU3F;
 
-            break;
-        }
+	    break;
+	}
     }
-
+    
     if (!found)
-        return -1;
+	return -1;
 
     /* now open uio device, and return */
     snprintf(path, MAXPATHLEN, "/dev/uio%d", *uio_num);
     uio_fd = open(path, O_RDWR | O_SYNC);
     if (uio_fd < 0)
-        D_PERROR("libshjpeg: Can't open %s!", path);
+	D_PERROR("libshjpeg: Can't open %s!", path);
 
     return uio_fd;
 }
@@ -125,15 +125,15 @@ uio_enum_dev(shjpeg_context_t *context)
 
     /* already initialized? */
     if (data->uio_count > 0 ||
-        data->uio_device != NULL)
-    return 0;
-
+	data->uio_device != NULL)
+	return 0;
+    
     /* open uio kobjects */
     n = scandir("/sys/class/uio", &namelist, 0, alphasort);
     if (n < 3) {
-        /* we must have at least 3 entries (".", "..", "uio0", ...)  */
-        D_PERROR("libshjpeg: Could not open /sys/class/uio!");
-        return -1;
+	/* we must have at least 3 entries (".", "..", "uio0", ...)  */
+	D_PERROR("libshjpeg: Could not open /sys/class/uio!");
+	return -1;
     }
 
     /* alloc memory for device list */
@@ -141,30 +141,30 @@ uio_enum_dev(shjpeg_context_t *context)
     data->uio_device = malloc(sizeof(char*) * (n - 2));
     data->uio_dpath = malloc(sizeof(char*) * (n - 2));
     if (!data->uio_device || !data->uio_dpath) {
-        D_PERROR("libshjpeg: Couldn't allocate uio device list");
-        return -1;
+	D_PERROR("libshjpeg: Couldn't allocate uio device list");
+	return -1;
     }
 
     /* enumerate available device */
     for(i = 0; i < n; i++) {
-        if (strncmp(namelist[i]->d_name, "uio", 3) != 0)
-            continue;
+	if (strncmp(namelist[i]->d_name, "uio", 3) != 0)
+	    continue;
 
-        snprintf(path, MAXPATHLEN,
-             "/sys/class/uio/%s/name", namelist[i]->d_name);
+	snprintf(path, MAXPATHLEN, 
+		 "/sys/class/uio/%s/name", namelist[i]->d_name);
 
-        /* read UIO device name */
-        if (uio_readfile(context, path, 128, uio_name) < 0) {
-            D_ERROR("libshjpeg: Can't read '%s'", path);
-            free(data->uio_device);
-            free(data->uio_dpath);
-            return -1;
-        } else {
-            data->uio_device[data->uio_count] = strdup(uio_name);
-            data->uio_dpath[data->uio_count]  = strdup(path);
-            data->uio_count++;
-        }
-        free(namelist[i]);
+	/* read UIO device name */
+	if (uio_readfile(context, path, 128, uio_name) < 0) {
+	    D_ERROR("libshjpeg: Can't read '%s'", path);
+	    free(data->uio_device);
+	    free(data->uio_dpath);
+	    return -1;
+	} else {
+	    data->uio_device[data->uio_count] = strdup(uio_name);
+	    data->uio_dpath[data->uio_count]  = strdup(path);
+	    data->uio_count++;
+	}
+	free(namelist[i]);
     }
     free(namelist);
 
@@ -176,25 +176,25 @@ uio_enum_dev(shjpeg_context_t *context)
  */
 
 static int
-uio_get_maps(shjpeg_context_t   *context,
-         const int       uio_num,
-         const int       maps_num,
-         unsigned long  *addr,
-         unsigned long  *size)
+uio_get_maps(shjpeg_context_t   *context, 
+	     const int		 uio_num,
+	     const int		 maps_num,
+	     unsigned long 	*addr,
+	     unsigned long 	*size)
 {
     char path[MAXPATHLEN];
     char buffer[128];
 
-    snprintf(path, MAXPATHLEN,
-         "/sys/class/uio/uio%d/maps/map%d/addr", uio_num, maps_num);
+    snprintf(path, MAXPATHLEN, 
+	     "/sys/class/uio/uio%d/maps/map%d/addr", uio_num, maps_num);
     if (uio_readfile(context, path, 128, buffer) < 0 )
-        return -1;
+	return -1;
     sscanf(buffer, "%lx", addr);
 
-    snprintf(path, MAXPATHLEN,
-         "/sys/class/uio/uio%d/maps/map%d/size", uio_num, maps_num);
+    snprintf(path, MAXPATHLEN, 
+	     "/sys/class/uio/uio%d/maps/map%d/size", uio_num, maps_num);
     if (uio_readfile(context, path, 128, buffer) < 0)
-        return -1;
+	return -1;
     sscanf(buffer, "%lx", size);
 
     return 0;
@@ -209,13 +209,13 @@ uio_shutdown(shjpeg_internal_t*data)
 {
     /* unmap */
     if (data->jpu_base)
-        munmap((void*) data->jpu_base, data->jpu_size);
+	munmap((void*) data->jpu_base, data->jpu_size);
 
     if (data->veu_base)
-        munmap((void*) data->veu_base, data->veu_size);
+	munmap((void*) data->veu_base, data->veu_size);
 
     if (data->jpeg_virt)
-        munmap((void*) data->jpeg_virt, data->jpeg_size);
+	munmap((void*) data->jpeg_virt, data->jpeg_size);
 
     /* close UIO dev */
     close(data->jpu_uio_fd);
@@ -239,21 +239,21 @@ uio_clear_irq(shjpeg_context_t *context, int fd, const char *name)
     int n = 1, rc = 0;
 
     if (lockf(fd, F_LOCK, 0) < 0) {
-        D_PERROR("libshjpeg: Couldn't lock %s UIO.", name);
-        return -1;
+    	D_PERROR("libshjpeg: Couldn't lock %s UIO.", name);
+	return -1;
     } else {
-    /* release irq just in case */
-        if (write(fd, &n, sizeof(n)) < sizeof(n)) {
-            D_PERROR("libshjpeg: unblock %s IRQ failed.", name);
-            rc = -1;
-            goto quit;
-        }
+	/* release irq just in case */
+	if (write(fd, &n, sizeof(n)) < sizeof(n)) {
+	    D_PERROR("libshjpeg: unblock %s IRQ failed.", name);
+	    rc = -1;
+	    goto quit;
+	}
 
-        quit:
-        if (lockf(fd, F_ULOCK, 0) < 0) {
-            D_PERROR("libshjpeg: Couldn't unlock %s UIO.", name);
-            return rc;
-        }
+    quit:
+	if (lockf(fd, F_ULOCK, 0) < 0) {
+	    D_PERROR("libshjpeg: Couldn't unlock %s UIO.", name);
+	    return rc;
+	}
     }
 
     return rc;
@@ -269,99 +269,99 @@ uio_init(shjpeg_context_t *context, shjpeg_internal_t *data)
 
     /* enum UIO device */
     if (uio_enum_dev(context) < 0) {
-        D_ERROR("libshjpeg: Cannot list UIO device");
-        return -1;
+	D_ERROR("libshjpeg: Cannot list UIO device");
+	return -1;
     }
 
     /* Open UIO for JPU. */
-    if ((data->jpu_uio_fd = uio_open_dev(context, "JPU",
-                     &data->jpu_uio_num)) < 0) {
-        D_ERROR("libshjpeg: Cannot find UIO for JPU!");
-        return -1;
+    if ((data->jpu_uio_fd = uio_open_dev(context, "JPU", 
+					 &data->jpu_uio_num)) < 0) {
+	D_ERROR("libshjpeg: Cannot find UIO for JPU!");
+	return -1;
     }
 
     /* Open UIO for VEU. */
-    if ((data->veu_uio_fd = uio_open_dev(context, "VEU",
-                     &data->veu_uio_num)) < 0) {
-        D_ERROR( "libshjpeg: Cannot find UIO for VEU!" );
-        return -1;
+    if ((data->veu_uio_fd = uio_open_dev(context, "VEU", 
+					 &data->veu_uio_num)) < 0) {
+	D_ERROR( "libshjpeg: Cannot find UIO for VEU!" );
+	return -1;
     }
 
     /*
-     * Get registers and contiguous memory for JPU and VEU.
+     * Get registers and contiguous memory for JPU and VEU. 
      */
 
     /* for JPU registers */
-    if (uio_get_maps(context, data->jpu_uio_num, 0, &data->jpu_phys,
-             &data->jpu_size) < 0) {
-        D_ERROR("libshjpeg: Can't get JPU base address!");
-        goto error;
+    if (uio_get_maps(context, data->jpu_uio_num, 0, &data->jpu_phys,  
+		     &data->jpu_size) < 0) {
+	D_ERROR("libshjpeg: Can't get JPU base address!");
+	goto error;
     }
 
     /* for VEU registers */
-    if (uio_get_maps(context, data->veu_uio_num, 0, &data->veu_phys,
-             &data->veu_size) < 0) {
-        D_ERROR("libshjpeg: Can't get JPU base address!");
-        goto error;
+    if (uio_get_maps(context, data->veu_uio_num, 0, &data->veu_phys,  
+		     &data->veu_size) < 0) {
+	D_ERROR("libshjpeg: Can't get JPU base address!");
+	goto error;
     }
 
     /* for JPEG memory */
-    if (uio_get_maps(context, data->jpu_uio_num, 1, &data->jpeg_phys,
-             &data->jpeg_size) < 0) {
-        D_ERROR("libshjpeg: Can't get JPU base address!");
-        goto error;
+    if (uio_get_maps(context, data->jpu_uio_num, 1, &data->jpeg_phys, 
+		     &data->jpeg_size) < 0) {
+	D_ERROR("libshjpeg: Can't get JPU base address!");
+	goto error;
     }
 
     D_INFO("libshjpeg: uio#=%d, jpu_phys=%08lx(%08lx), jpeg_phys=%08lx(%08lx)",
-       data->jpu_uio_num, data->jpu_phys, data->jpu_size,
-       data->jpeg_phys, data->jpeg_size);
+	   data->jpu_uio_num, data->jpu_phys, data->jpu_size,
+	   data->jpeg_phys, data->jpeg_size);
     D_INFO("libshjpeg: uio#=%d, veu_phys=%08lx(%08lx)",
-       data->veu_uio_num, data->veu_phys, data->veu_size);
+	   data->veu_uio_num, data->veu_phys, data->veu_size);
 
     /* Map JPU registers and memory. */
     data->jpu_base = mmap(NULL, data->jpu_size,
-              PROT_READ | PROT_WRITE,
-              MAP_SHARED, data->jpu_uio_fd, 0);
+			  PROT_READ | PROT_WRITE,
+			  MAP_SHARED, data->jpu_uio_fd, 0);
     if (data->jpu_base == MAP_FAILED) {
-        D_PERROR("libshjpeg: Could not map JPU MMIO!" );
-        goto error;
+	D_PERROR("libshjpeg: Could not map JPU MMIO!" );
+	goto error;
     }
 
     /* Map contiguous memory for JPU. */
     data->jpeg_virt = mmap(NULL, data->jpeg_size,
-               PROT_READ | PROT_WRITE,
-               MAP_SHARED, data->jpu_uio_fd, getpagesize());
+			   PROT_READ | PROT_WRITE,
+			   MAP_SHARED, data->jpu_uio_fd, getpagesize());
     if (data->jpeg_virt == MAP_FAILED) {
-        D_PERROR("libshjpeg: Could not map /dev/mem at 0x%08x (length %lu)!",
-            getpagesize(), data->jpeg_size);
-        goto error;
+	D_PERROR("libshjpeg: Could not map /dev/mem at 0x%08x (length %lu)!",
+		 getpagesize(), data->jpeg_size);
+	goto error;
     }
 
     /* Map VEU registers. */
     data->veu_base = mmap(NULL, data->veu_size,
-              PROT_READ | PROT_WRITE,
-              MAP_SHARED, data->veu_uio_fd, 0);
+			  PROT_READ | PROT_WRITE,
+			  MAP_SHARED, data->veu_uio_fd, 0);
     if (data->veu_base == MAP_FAILED) {
-        D_PERROR( "libshjpeg: Could not map VEU MMIO!" );
-        goto error;
+	D_PERROR( "libshjpeg: Could not map VEU MMIO!" );
+	goto error;
     }
 
     /* initialize buffer base address */
-    data->jpeg_lb1  =
-    data->jpeg_phys + SHJPEG_JPU_RELOAD_SIZE * 2; // line buffer 1
-    data->jpeg_lb2  =
-    data->jpeg_lb1  + SHJPEG_JPU_LINEBUFFER_SIZE; // line buffer 2
-    data->jpeg_data =
-    data->jpeg_lb2  + SHJPEG_JPU_LINEBUFFER_SIZE; // jpeg data
+    data->jpeg_lb1  = 
+	data->jpeg_phys + SHJPEG_JPU_RELOAD_SIZE * 2; // line buffer 1
+    data->jpeg_lb2  = 
+	data->jpeg_lb1  + SHJPEG_JPU_LINEBUFFER_SIZE; // line buffer 2
+    data->jpeg_data = 
+	data->jpeg_lb2  + SHJPEG_JPU_LINEBUFFER_SIZE; // jpeg data
 
     /*
      * XXX: just in case, for the pending IRQ from the previous user
      * we must release to unblock interrupt. otherwise we won't get IRQ.
      */
     if (uio_clear_irq(context, data->jpu_uio_fd, "JPU") < 0)
-        goto error;
+	goto error;
     if (uio_clear_irq(context, data->veu_uio_fd, "VEU") < 0)
-        goto error;
+	goto error;
 
     return 0;
 
@@ -395,11 +395,11 @@ shjpeg_init(int verbose)
 
     /* initialize context */
     if ((context = malloc(sizeof(shjpeg_context_t))) == NULL) {
-        if (verbose)
-            perror("libshjpeg: Can't allocate libshjpeg context - ");
-        return NULL;
+	if (verbose)
+	    perror("libshjpeg: Can't allocate libshjpeg context - ");
+	return NULL;
     }
-    memset((void*)context, 0, sizeof(shjpeg_context_t));
+    memset((void*)context, 0, sizeof(shjpeg_context_t)); 
 
     data.context = context;
     context->internal_data = &data;
@@ -409,15 +409,15 @@ shjpeg_init(int verbose)
 
     /* check ref count */
     if (data.ref_count) {
-        data.ref_count++;
-        return context;
+	data.ref_count++;
+	return context;
     }
 
     /* init uio */
     if (uio_init(context, &data)) {
-        D_ERROR("libshjpeg: UIO initialization failed.");
-        free(context);
-        return NULL;
+	D_ERROR("libshjpeg: UIO initialization failed.");
+	free(context);
+	return NULL;
     }
 
     data.ref_count = 1;
@@ -434,13 +434,13 @@ shjpeg_shutdown(shjpeg_context_t *context)
 {
     /* clean up */
     if (context)
-        free(context);
+	free(context);
 
     if (!data.ref_count)
-        goto quit;
+	goto quit;
 
     if (--data.ref_count)
-        goto quit;
+	goto quit;
 
     /* shutdown uio */
     uio_shutdown(&data);
@@ -455,23 +455,23 @@ quit:
 
 int
 shjpeg_get_frame_buffer(shjpeg_context_t *context,
-            unsigned long    *phys,
-            void        **buffer,
-            size_t       *size )
+			unsigned long	 *phys,
+			void		**buffer,
+			size_t 		 *size )
 {
     if ( !data.ref_count ) {
-    D_ERROR("libshjpeg: not initialized yet.");
-    return -1;
+	D_ERROR("libshjpeg: not initialized yet.");
+	return -1;
     }
 
     if ( phys )
-        *phys = data.jpeg_data;
+	*phys	  = data.jpeg_data;
 
     if ( buffer )
-        *buffer = (void*)data.jpeg_virt + SHJPEG_JPU_SIZE;
+	*buffer = (void*)data.jpeg_virt + SHJPEG_JPU_SIZE;
 
     if ( size )
-        *size = data.jpeg_size - SHJPEG_JPU_SIZE;
+	*size	  = data.jpeg_size - SHJPEG_JPU_SIZE;
 
     return 0;
 }
