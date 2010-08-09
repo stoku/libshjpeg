@@ -31,7 +31,7 @@
  */
 
 typedef enum {
-    UIO_CAPS_VEU3F = 0x00000001,	// VEU is VEU3F
+	UIO_CAPS_VEU3F = 0x00000001,	// VEU is VEU3F
 } uio_caps_t;
 
 /*
@@ -39,64 +39,64 @@ typedef enum {
  */
 
 typedef struct {
-    int                  ref_count;	// reference counter
+	int ref_count;		// reference counter
 
-    int                  jpu_uio_num;	// ID for JPU UIO
-    int                  jpu_uio_fd;	// fd for JPU UIO
-    int                  veu_uio_num;	// ID for VEU UIO
-    int                  veu_uio_fd;	// fd for VEU UIO
+	int jpu_uio_num;	// ID for JPU UIO
+	int jpu_uio_fd;		// fd for JPU UIO
+	int veu_uio_num;	// ID for VEU UIO
+	int veu_uio_fd;		// fd for VEU UIO
 
-    void		*jpeg_virt;	// virt addr of cont buffer
-    unsigned long        jpeg_phys;	// phys addr of cont buffer
-    unsigned long        jpeg_size;	// size of contiguous buffer
+	void *jpeg_virt;	// virt addr of cont buffer
+	unsigned long jpeg_phys;	// phys addr of cont buffer
+	unsigned long jpeg_size;	// size of contiguous buffer
 
-    unsigned long        jpeg_lb1;	// phys addr of line buffer 1
-    unsigned long        jpeg_lb2;	// phys addr of line buffer 2
+	unsigned long jpeg_lb1;	// phys addr of line buffer 1
+	unsigned long jpeg_lb2;	// phys addr of line buffer 2
 
-    unsigned long        jpeg_data;	// phys addr of jpeg data
+	unsigned long jpeg_data;	// phys addr of jpeg data
 
-    // XXX: mmio_* -> jpu_*
-    unsigned long        jpu_phys;	// phys addr of JPU regs
-    volatile void	*jpu_base;	// virt addr to JPU regs
-    unsigned long        jpu_size;	// size of JPU reg range
+	// XXX: mmio_* -> jpu_*
+	unsigned long jpu_phys;	// phys addr of JPU regs
+	volatile void *jpu_base;	// virt addr to JPU regs
+	unsigned long jpu_size;	// size of JPU reg range
 
-    unsigned long        veu_phys;	// phys addr of VEU regs
-    volatile void	*veu_base;	// virt addr of VEU regs
-    unsigned long	 veu_size;	// size of VEU reg range
+	unsigned long veu_phys;	// phys addr of VEU regs
+	volatile void *veu_base;	// virt addr of VEU regs
+	unsigned long veu_size;	// size of VEU reg range
 
-    /* uio device list */
-    int			 uio_count;	// number of UIO device
-    char	       **uio_device;	// list of uio device
-    char	       **uio_dpath;	// list of uio device path
+	/* uio device list */
+	int uio_count;		// number of UIO device
+	char **uio_device;	// list of uio device
+	char **uio_dpath;	// list of uio device path
 
-    /* UIO flags */
-    uio_caps_t		 uio_caps;	// device details
+	/* UIO flags */
+	uio_caps_t uio_caps;	// device details
 
-    /* internal to state machine */
-    uint32_t             jpeg_buffers;
-    int			 jpeg_buffer;
-    uint32_t		 jpeg_error;
-    int                  jpeg_encode;
-    int                  jpeg_reading;
-    int                  jpeg_writing;
-    int                  jpeg_height;
-    int                  jpeg_end;
-    uint32_t		 jpeg_linebufs;
-    int                  jpeg_linebuf;
-    int                  jpeg_line;
+	/* internal to state machine */
+	uint32_t jpeg_buffers;
+	int jpeg_buffer;
+	uint32_t jpeg_error;
+	int jpeg_encode;
+	int jpeg_reading;
+	int jpeg_writing;
+	int jpeg_height;
+	int jpeg_end;
+	uint32_t jpeg_linebufs;
+	int jpeg_linebuf;
+	int jpeg_line;
 
-    int                  jpu_running;
-    int			 jpu_lb_first_irq;
+	int jpu_running;
+	int jpu_lb_first_irq;
 
-    int                  veu_linebuf;
-    int                  veu_running;
+	int veu_linebuf;
+	int veu_running;
 
-    /* internal data */
-    shjpeg_context_t    *context;
+	/* internal data */
+	shjpeg_context_t *context;
 } shjpeg_internal_t;
 
 /* page alignment */
 #define _PAGE_SIZE (getpagesize())
 #define _PAGE_ALIGN(len) (((len) + _PAGE_SIZE - 1) & ~(_PAGE_SIZE - 1))
 
-#endif /* !__shjpeg_internal_h__ */
+#endif				/* !__shjpeg_internal_h__ */

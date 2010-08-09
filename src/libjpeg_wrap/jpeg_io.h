@@ -37,17 +37,16 @@ int jpeg_dest_init(void *private_data);
 void jpeg_dest_finalize(void *private_data);
 int jpeg_dest_write (void *private_data, size_t *n_bytes, void *dataptr);
 
-
 boolean cache_input_buffer (j_decompress_ptr cinfo);
 
 /*extracted from jdatasrc.c in libjpeg 8b*/
   /* Expanded data source object for stdio input */
 typedef struct {
-  struct jpeg_source_mgr pub;   /* public fields */
+    struct jpeg_source_mgr pub;   /* public fields */
 
-  FILE * infile;                /* source stream */
-  JOCTET * buffer;              /* start of buffer */
-  boolean start_of_file;        /* have we gotten any data yet? */
+    FILE * infile;                /* source stream */
+    JOCTET * buffer;              /* start of buffer */
+    boolean start_of_file;        /* have we gotten any data yet? */
 } my_source_mgr;
 
 typedef my_source_mgr * my_src_ptr;
@@ -57,10 +56,10 @@ typedef my_source_mgr * my_src_ptr;
   /* Expanded data destination object for stdio output */
 
 typedef struct {
-  struct jpeg_destination_mgr pub; /* public fields */
+    struct jpeg_destination_mgr pub; /* public fields */
 
-  FILE * outfile;               /* target stream */
-  JOCTET * buffer;              /* start of buffer */
+    FILE * outfile;               /* target stream */
+    JOCTET * buffer;              /* start of buffer */
 } my_destination_mgr;
 
 typedef my_destination_mgr * my_dest_ptr;

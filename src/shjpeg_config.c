@@ -27,123 +27,123 @@
  */
 
 const char *jpu_reg_str[] = {
-    "JCMOD",			// 0x00
-    "JCCMD",
-    "JCSTS",
-    "JCQTN",
+	"JCMOD",		// 0x00
+	"JCCMD",
+	"JCSTS",
+	"JCQTN",
 
-    "JCHTN",			// 0x10
-    "JCDRIU",
-    "JCDRID",
-    "JCVSZU",
+	"JCHTN",		// 0x10
+	"JCDRIU",
+	"JCDRID",
+	"JCVSZU",
 
-    "JCVSZD",			// 0x20
-    "JCHSZU",
-    "JCHSZD",
-    "JCDTCU",
+	"JCVSZD",		// 0x20
+	"JCHSZU",
+	"JCHSZD",
+	"JCDTCU",
 
-    "JCDTCM",			// 0x30
-    "JCDTCD",
-    "JINTE",
-    "JINTS",
+	"JCDTCM",		// 0x30
+	"JCDTCD",
+	"JINTE",
+	"JINTS",
 
-    "JCDERR",			// 0x40
-    "JCRST",
-    "-",
-    "-",
+	"JCDERR",		// 0x40
+	"JCRST",
+	"-",
+	"-",
 
-    "-", "-", "-", "-",		// 0x50
+	"-", "-", "-", "-",	// 0x50
 
-    "JIFCNT",			// 0x60
-    "-", "-", "-",
+	"JIFCNT",		// 0x60
+	"-", "-", "-",
 
-    "JIFECNT",			// 0x70
-    "JIFESYA1",
-    "JIFESCA1",
-    "JIFESYA2",
+	"JIFECNT",		// 0x70
+	"JIFESYA1",
+	"JIFESCA1",
+	"JIFESYA2",
 
-    "JIFESCA2",			// 0x80
-    "JIFESMW",
-    "JIFESVSZ",
-    "JIFESHSZ",
-		
-    "JIFEDA1",			// 0x90
-    "JIFEDA2",
-    "JIFEDRSZ", "-",
-		
-    "JIFDCNT",			// 0xa0
-    "JIFDSA1",
-    "JIFDSA2",
-    "JIFDDRSZ",
+	"JIFESCA2",		// 0x80
+	"JIFESMW",
+	"JIFESVSZ",
+	"JIFESHSZ",
 
-    "JIFDDMW",			// 0xb0
-    "JIFDDVSZ",
-    "JIFDDHSZ",
-    "JIFDDYA1",
-		
-    "JIFDDCA1",			// 0xc0
-    "JIFDDYA2",
-    "JIFDDCA2", "-",
+	"JIFEDA1",		// 0x90
+	"JIFEDA2",
+	"JIFEDRSZ", "-",
+
+	"JIFDCNT",		// 0xa0
+	"JIFDSA1",
+	"JIFDSA2",
+	"JIFDDRSZ",
+
+	"JIFDDMW",		// 0xb0
+	"JIFDDVSZ",
+	"JIFDDHSZ",
+	"JIFDDYA1",
+
+	"JIFDDCA1",		// 0xc0
+	"JIFDDYA2",
+	"JIFDDCA2", "-",
 };
 
 const char *veu_reg_str[] = {
-    "VESTR",		// 0x000
-    "-",
-    "-",
-    "-",
+	"VESTR",		// 0x000
+	"-",
+	"-",
+	"-",
 
-    "VESWR",		// 0x010
-    "VESSR",
-    "VSAYR",
-    "VSACR",
+	"VESWR",		// 0x010
+	"VESSR",
+	"VSAYR",
+	"VSACR",
 
-    "VBSSR",		// 0x020
-    "-",
-    "-",
-    "-",
+	"VBSSR",		// 0x020
+	"-",
+	"-",
+	"-",
 
-    "VEDWR",		// 0x030
-    "VDAYR",
-    "VDACR",
-    "-",
+	"VEDWR",		// 0x030
+	"VDAYR",
+	"VDACR",
+	"-",
 
-    "-",		// 0x040
-    "-",
-    "-",
-    "-",
+	"-",			// 0x040
+	"-",
+	"-",
+	"-",
 
-    "VTRCR",		// 0x050
-    "VRFCR",
-    "VRFSR",
-    "VENHR",
+	"VTRCR",		// 0x050
+	"VRFCR",
+	"VRFSR",
+	"VENHR",
 
-    "-",		// 0x060
-    "-",
-    "-",
-    "-",
+	"-",			// 0x060
+	"-",
+	"-",
+	"-",
 
-    "VFMCR",		// 0x070
-    "VVTCR",
-    "VHTCR",
-    "-",
+	"VFMCR",		// 0x070
+	"VVTCR",
+	"VHTCR",
+	"-",
 
-    "VAPCR",		// 0x080
-    "VECCR",
-    "-",
-    "-",
+	"VAPCR",		// 0x080
+	"VECCR",
+	"-",
+	"-",
 
-    "VAFXR",		// 0x090
-    "VSWPR",
-    "-",
-    "-",
+	"VAFXR",		// 0x090
+	"VSWPR",
+	"-",
+	"-",
 
-    "VEIER",		// 0x0a0
-    "VEVTR",
-    "-",
-    "-",
+	"VEIER",		// 0x0a0
+	"VEVTR",
+	"-",
+	"-",
 
-    "VSTAR",		// 0x0b0
-    "VBSRR",
-    "-",
-    "-"
+	"VSTAR",		// 0x0b0
+	"VBSRR",
+	"-",
+	"-"
 };

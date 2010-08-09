@@ -125,7 +125,7 @@
 
 /*
  * JPU_JCCMD values
- */ 
+ */
 #define JPU_JCCMD_START			0x00000001
 #define JPU_JCCMD_RESTART		0x00000002
 #define JPU_JCCMD_END			0x00000004
@@ -180,4 +180,4 @@
 extern const char *jpu_reg_str[];
 extern const char *veu_reg_str[];
 
-#endif /* !__shjpu_regs_h__ */
+#endif				/* !__shjpu_regs_h__ */

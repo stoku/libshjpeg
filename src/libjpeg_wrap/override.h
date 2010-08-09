@@ -45,10 +45,12 @@ int shjpeg_read_header(j_decompress_ptr cinfo, boolean require_image);
   since the libjpeg state is not recoverable from where these functions may
   fail.  */
 
-JDIMENSION shjpeg_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines, JDIMENSION num_lines);
+JDIMENSION shjpeg_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines, 
+				  JDIMENSION num_lines);
 void shjpeg_finish_compress(j_compress_ptr cinfo);
 
-JDIMENSION shjpeg_read_scanlines(j_decompress_ptr cinfo, JSAMPARRAY scanlines, JDIMENSION max_lines);
+JDIMENSION shjpeg_read_scanlines(j_decompress_ptr cinfo, JSAMPARRAY scanlines, 
+				  JDIMENSION max_lines);
 boolean shjpeg_finish_decompress(j_decompress_ptr cinfo);
 
 /*Common functions
@@ -59,4 +61,5 @@ void shjpeg_abort(j_common_ptr cinfo);
 
 struct jpeg_error_mgr *shjpeg_std_error(struct jpeg_error_mgr * err);
 void shjpeg_CreateCompress(j_compress_ptr cinfo, int version, size_t structsize);
-void shjpeg_CreateDecompress(j_decompress_ptr cinfo, int version, size_t structsize);
+void shjpeg_CreateDecompress(j_decompress_ptr cinfo, int version, 
+		 		size_t structsize);
