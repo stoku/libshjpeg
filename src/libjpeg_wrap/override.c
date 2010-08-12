@@ -165,6 +165,15 @@ boolean shjpeg_start_decompress(j_decompress_ptr cinfo)
 	context->pitch = context->width * cinfo->out_color_components;
 	context->pitch = (context->pitch + 7) & ~7;	// 8 byte align
 
+	shjpeg_get_frame_buffer(context, &context->buffer.phys,
+				&context->buffer.buffer,
+				&context->buffer.size);
+
+	if (context->buffer.size < context->pitch * context->height) {
+		TRACEMS(cinfo, 1, SHJMSG_LIBJPEG_MODE);
+		return libjpeg_hooks.jpeg_start_decompress(cinfo);
+	}
+
 	context->mode444 = 0;
 
 	/* True if 4:2:0 */
@@ -196,9 +205,6 @@ boolean shjpeg_start_decompress(j_decompress_ptr cinfo)
 		return libjpeg_hooks.jpeg_start_decompress(cinfo);
 	}
 	context->active_object = (j_common_ptr) cinfo;
-	shjpeg_get_frame_buffer(context, &context->buffer.phys,
-				&context->buffer.buffer,
-				&context->buffer.size);
 	active_hooks = &jpumode_hooks;
 	return TRUE;
 }
@@ -291,6 +297,15 @@ void shjpeg_start_compress(j_compress_ptr cinfo, boolean write_all_tables)
 	context->pitch = context->width * cinfo->input_components;
 	context->pitch = (context->pitch + 7) & ~7;	// 8 byte align
 
+	shjpeg_get_frame_buffer(context, &context->buffer.phys,
+				&context->buffer.buffer,
+				&context->buffer.size);
+	if (context->buffer.size < context->pitch * context->height) {
+		TRACEMS(cinfo, 1, SHJMSG_LIBJPEG_MODE);
+		libjpeg_hooks.jpeg_start_compress(cinfo, write_all_tables);
+		return;
+	}
+
 	context->libjpeg_disabled = 1;
 
 	context->sops = &jpeg_dest_ops;
@@ -300,9 +315,6 @@ void shjpeg_start_compress(j_compress_ptr cinfo, boolean write_all_tables)
 	context->private = (void *) &cictxt;
 
 	context->active_object = (j_common_ptr) cinfo;
-	shjpeg_get_frame_buffer(context, &context->buffer.phys,
-				&context->buffer.buffer,
-				&context->buffer.size);
 	active_hooks = &jpumode_hooks;
 }
 
