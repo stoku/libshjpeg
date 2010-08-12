@@ -37,6 +37,7 @@
 #include "shjpeg_regs.h"
 #include "shjpeg_jpu.h"
 #include "shjpeg_veu.h"
+#include "shjpeg_softhelper.h"
 
 /*
  * reset JPU
@@ -54,7 +55,8 @@ void shjpeg_jpu_reset(shjpeg_internal_t * data)
 		usleep(1);
 }
 static
-void process_jpu_ints(int ints, shjpeg_internal_t *data, int *done) {
+void process_jpu_ints(int ints, shjpeg_context_t *context,  
+		shjpeg_internal_t *data, int *done) {
 
 	/* Header */
 	if (ints & JPU_JINTS_INS3_HEADER) {
@@ -151,6 +153,7 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 	int ret, ints, val, done;
 	int encode = (jpeg->flags & SHJPEG_JPU_FLAG_ENCODE);
 	int convert = (jpeg->flags & SHJPEG_JPU_FLAG_CONVERT);
+	int softconvert = (jpeg->flags & SHJPEG_JPU_FLAG_SOFTCONVERT);
 	struct pollfd fds[] = {
 		{
 		 .fd = data->jpu_uio_fd,
@@ -224,8 +227,53 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 				shjpeg_veu_set_dst_jpu(data);
 				shjpeg_veu_start(data, 0);
 			}
-		}
 
+		} else if (softconvert && !data->jpeg_end &&
+				!data->jpu_running) {
+			void *ydata, *cdata;
+			int lines;
+			int i;
+			/* convert first buffer and if JPU is not
+			   running - start */
+			//process both bufers to kick off the state machine
+			for (i=0;i<2;i++) {
+				D_INFO("libshjpeg: soft: process LB%d %d -> %d",
+					data->veu_linebuf,
+					jpeg->soft_line,
+					jpeg->soft_line + lines);
+				soft_get_src_jpu(data, &ydata, &cdata);
+				lines = context->height - jpeg->soft_line;
+				lines = lines > SHJPEG_JPU_LINEBUFFER_HEIGHT ?
+				SHJPEG_JPU_LINEBUFFER_HEIGHT : lines;
+
+				if (lines <=  0)
+					continue;
+
+				data->jpeg_linebufs &=
+						~(1 << data->veu_linebuf);
+
+				soft_fromYCbCr(data, context, ydata, cdata,
+					data->user_jpeg_virt +
+					jpeg->soft_offset, lines);
+				jpeg->soft_offset += lines * context->pitch;
+				jpeg->soft_line += lines;
+				data->veu_linebuf = (data->veu_linebuf + 1) % 2;
+			}
+
+			if (!(data->jpeg_linebufs &
+					(1 << data->jpeg_linebuf))) {
+				D_INFO("libshjpeg: jpu: process LB%d",
+					data->jpeg_linebuf);
+
+				if (data->jpu_lb_first_irq)
+					data->jpu_lb_first_irq = 0;
+				else
+					shjpeg_jpu_setreg32(data, JPU_JCCMD,
+						JPU_JCCMD_LCMD1 |
+						JPU_JCCMD_LCMD2);
+				data->jpu_running = 1;
+			}
+		}
 		if (data->jpeg_buffers && !data->jpeg_writing) {
 			D_INFO(" '-> write start (buffers: %d)",
 			       data->jpeg_buffers);
@@ -234,7 +282,8 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 			// JPU_JCCMD = JCCMD_WRITE_RESTART;
 			shjpeg_jpu_setreg32(data, JPU_JCCMD,
 					    JPU_JCCMD_WRITE_RESTART);
-		}
+	}
+
 	} else if (data->jpeg_buffers && !data->jpeg_reading) {
 		D_INFO(" '-> read start (buffers: %d)",
 		       data->jpeg_buffers);
@@ -309,7 +358,7 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 			       data->jpeg_buffers);
 
 			if (ints) {
-				process_jpu_ints(ints, data, &done);
+				process_jpu_ints(ints, context, data, &done);
 			}
 
 			/* re-enable IRQ */
@@ -403,6 +452,40 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 			} else {
 				D_INFO("libshjpeg: veu: wait for LB%d",
 				       data->veu_linebuf);
+			}
+		}
+		else if (softconvert &&
+				(data->jpeg_linebufs &
+				(1 << data->veu_linebuf))) {
+			void *ydata, *cdata;
+			int lines;
+			soft_get_src_jpu(data, &ydata, &cdata);
+			lines = context->height - jpeg->soft_line;
+			lines = lines > SHJPEG_JPU_LINEBUFFER_HEIGHT ?
+				SHJPEG_JPU_LINEBUFFER_HEIGHT : lines;
+			if (lines > 0) {
+				data->jpeg_linebufs &=
+						~(1 << data->veu_linebuf);
+				D_INFO("libshjpeg: soft: process LB%d",
+					data->veu_linebuf);
+				if (data->jpeg_encode) {
+					soft_fromYCbCr(data, context, ydata,
+						cdata, data->user_jpeg_virt +
+						jpeg->soft_offset, lines);
+				} else {
+					soft_toYCbCr(data, context, ydata,
+						cdata, data->user_jpeg_virt +
+						jpeg->soft_offset, lines);
+				}
+				jpeg->soft_offset += context->pitch * lines;
+				jpeg->soft_line += lines;
+				data->veu_linebuf = (data->veu_linebuf + 1) % 2;
+			} else if (data->jpeg_encode) {
+				data->jpeg_linebufs &=
+						~(1 << data->veu_linebuf);
+				data->veu_linebuf = (data->veu_linebuf + 1) % 2;
+				D_INFO("libshjpeg: soft: clear LB%d",
+					data->veu_linebuf);
 			}
 		}
 

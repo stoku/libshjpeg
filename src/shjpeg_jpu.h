@@ -45,7 +45,8 @@ typedef enum {
 typedef enum {
 	SHJPEG_JPU_FLAG_RELOAD = 0x00000001,	/* enable reload mode */
 	SHJPEG_JPU_FLAG_CONVERT = 0x00000002,	/* enable conv. through VEU */
-	SHJPEG_JPU_FLAG_ENCODE = 0x00000004	/* set encoding mode */
+	SHJPEG_JPU_FLAG_ENCODE = 0x00000004,	/* set encoding mode */
+	SHJPEG_JPU_FLAG_SOFTCONVERT= 0x00000008	/* set encoding mode */
 } shjpeg_jpu_flags_t;
 
 typedef struct {
@@ -65,6 +66,9 @@ typedef struct {
 	u32 sa_y;
 	u32 sa_c;
 	u32 sa_inc;
+
+	u32 soft_offset;  //write position in output buffer
+	u32 soft_line;
 } shjpeg_jpu_t;
 
 /* read/write from/to registers */

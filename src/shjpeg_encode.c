@@ -35,6 +35,7 @@
 #include "shjpeg_internal.h"
 #include "shjpeg_jpu.h"
 #include "shjpeg_veu.h"
+#include "shjpeg_softhelper.h"
 
 static inline int coded_data_amount(shjpeg_internal_t * data)
 {
@@ -50,12 +51,16 @@ encode_hw(shjpeg_internal_t * data,
 	  unsigned long phys, int width, int height, int pitch)
 {
 	int ret = 0;
-	int i, fd = -1;
+	int i;
 	int written = 0;
 	u32 vtrcr = 0;
 	u32 vswpin = 0;
 	bool mode420 = false;
 	shjpeg_jpu_t jpeg;
+	vmap_data_t mdata;
+
+
+	memset(&mdata, 0, sizeof(mdata));
 
 	D_DEBUG_AT(SH7722_JPEG, "( %p, 0x%08lx|%d [%dx%d])",
 		   data, phys, pitch, width, height);
@@ -89,6 +94,9 @@ encode_hw(shjpeg_internal_t * data,
 	case SHJPEG_PF_RGB24:
 		vswpin = 0x77;
 		vtrcr |= (2 << 8) | 3;
+		break;
+
+	case SHJPEG_PF_YCbCr:
 		break;
 
 	default:
@@ -164,7 +172,6 @@ encode_hw(shjpeg_internal_t * data,
 	} else {
 		shjpeg_veu_t veu;
 
-		jpeg.flags |= SHJPEG_JPU_FLAG_CONVERT;
 		jpeg.height = height;
 
 		/* Setup JPU for encoding in line buffer mode. */
@@ -190,33 +197,44 @@ encode_hw(shjpeg_internal_t * data,
 				    SHJPEG_JPU_LINEBUFFER_SIZE_Y);
 		shjpeg_jpu_setreg32(data, JPU_JIFESMW,
 				    SHJPEG_JPU_LINEBUFFER_PITCH);
+		if (format == SHJPEG_PF_YCbCr) {
+			jpeg.flags |= SHJPEG_JPU_FLAG_SOFTCONVERT;
+			jpeg.soft_offset = jpeg.soft_line = 0;
 
-		/* Setup VEU for conversion/scaling (from surface to line buffer). */
-		memset((void *) &veu, 0, sizeof(shjpeg_veu_t));
+			context->pitch = pitch;
+			if (get_frame_buffer_virtual(data, context,
+					&mdata, format, phys) < 0) {
+				return -1;
+			}
+		} else {
+			jpeg.flags |= SHJPEG_JPU_FLAG_CONVERT;
+			/* Setup VEU for conversion/scaling
+			(from surface to line buffer). */
+			memset((void *) &veu, 0, sizeof(shjpeg_veu_t));
 
-		/* source */
-		veu.src.width = context->width;
-		veu.src.height = SHJPEG_JPU_LINEBUFFER_HEIGHT;
-		veu.src.pitch = pitch;
-		veu.src.yaddr = phys;
-		veu.src.caddr = phys + pitch * height;
+			/* source */
+			veu.src.width = context->width;
+			veu.src.height = SHJPEG_JPU_LINEBUFFER_HEIGHT;
+			veu.src.pitch = pitch;
+			veu.src.yaddr = phys;
+			veu.src.caddr = phys + pitch * height;
 
-		/* destination */
-		veu.dst.width = context->width;
-		veu.dst.height = context->height;
-		veu.dst.pitch = SHJPEG_JPU_LINEBUFFER_PITCH;
-		veu.dst.yaddr = data->jpeg_lb1;
-		veu.dst.caddr =
-		    data->jpeg_lb1 + SHJPEG_JPU_LINEBUFFER_SIZE_Y;
+			/* destination */
+			veu.dst.width = context->width;
+			veu.dst.height = context->height;
+			veu.dst.pitch = SHJPEG_JPU_LINEBUFFER_PITCH;
+			veu.dst.yaddr = data->jpeg_lb1;
+			veu.dst.caddr =
+			    data->jpeg_lb1 + SHJPEG_JPU_LINEBUFFER_SIZE_Y;
 
-		/* transformation parameter */
-		veu.vbssr = 16;
-		veu.vtrcr = vtrcr;
-		veu.vswpr = vswpin;
+			/* transformation parameter */
+			veu.vbssr = 16;
+			veu.vtrcr = vtrcr;
+			veu.vswpr = vswpin;
 
-		/* set VEU */
-		shjpeg_veu_init(data, &veu);
-
+			/* set VEU */
+			shjpeg_veu_init(data, &veu);
+		}
 		/* configs */
 		jpeg.sa_y = phys;
 		jpeg.sa_c = phys + pitch * height;
@@ -256,7 +274,7 @@ encode_hw(shjpeg_internal_t * data,
 
 				ptr =
 				    (void *) data->jpeg_virt + (i - 1) *
-				    		SHJPEG_JPU_RELOAD_SIZE;
+						SHJPEG_JPU_RELOAD_SIZE;
 				len = amount;
 				context->sops->write(context->private,
 						     &len, ptr);
@@ -280,14 +298,13 @@ encode_hw(shjpeg_internal_t * data,
 	    ("libshjpeg: Coded data amount: = %5d (written: %d, buffers: %d)",
 	     coded_data_amount(data), written, jpeg.buffers);
 
+	free_frame_buffer_virtual(&mdata);
 
 	/* Unlocking JPU using lockf(3) */
 	if (lockf(data->jpu_uio_fd, F_ULOCK, 0) < 0) {
 		ret = -1;
 		D_PERROR("libshjpeg: Could not unlock JPEG engine!");
 	}
-
-	close(fd);
 
 	return ret;
 }
@@ -326,6 +343,7 @@ shjpeg_encode(shjpeg_context_t * context,
 	case SHJPEG_PF_RGB16:
 	case SHJPEG_PF_RGB32:
 	case SHJPEG_PF_RGB24:
+	case SHJPEG_PF_YCbCr:
 		break;
 
 	default:

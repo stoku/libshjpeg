@@ -93,6 +93,14 @@ typedef struct {
 
 	/* internal data */
 	shjpeg_context_t *context;
+
+	/*Added for YCbCr (or other software assist) support*/
+	unsigned long        user_jpeg_data;	// user overridable phys add
+						// of jpeg data = jpeg_data
+						// if user uses defaults
+	void               *user_jpeg_virt;	// vir addr of user_jpeg_data;
+	void               *jpeg_lb1_virt;	// virt addr of line buffer 1
+	void               *jpeg_lb2_virt;	// virt addr of line buffer 2
 } shjpeg_internal_t;
 
 /* page alignment */

@@ -76,7 +76,7 @@ The libshjpeg library can decode to and encode from buffers with the following s
 
      * JCS_RGB24 
      * JCS_GRAYSCALE (coming soon - maybe)
-     * JCS_YCrCb (coming soon)
+     * JCS_YCrCb
 
 Additionally the following non-standard libjpeg formats are supported
      * JCS_RGB565 (on Android)
