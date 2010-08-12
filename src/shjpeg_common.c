@@ -313,10 +313,10 @@ static int uio_init(shjpeg_context_t * context, shjpeg_internal_t * data)
 
 	D_INFO ("libshjpeg: uio#=%d, jpu_phys=%08lx(%08lx), "
 		"jpeg_phys=%08lx(%08lx)",
-	     	data->jpu_uio_num, data->jpu_phys, data->jpu_size,
-	     	data->jpeg_phys, data->jpeg_size);
+		data->jpu_uio_num, data->jpu_phys, data->jpu_size,
+		data->jpeg_phys, data->jpeg_size);
 	D_INFO("libshjpeg: uio#=%d, veu_phys=%08lx(%08lx)",
-	       	data->veu_uio_num, data->veu_phys, data->veu_size);
+		data->veu_uio_num, data->veu_phys, data->veu_size);
 
 	/* Map JPU registers and memory. */
 	data->jpu_base = mmap(NULL, data->jpu_size,
@@ -335,7 +335,7 @@ static int uio_init(shjpeg_context_t * context, shjpeg_internal_t * data)
 	if (data->jpeg_virt == MAP_FAILED) {
 		D_PERROR ("libshjpeg: Could not map /dev/mem at 0x%08x"
 			"(length %lu)!",
-		     	getpagesize(), data->jpeg_size);
+			getpagesize(), data->jpeg_size);
 		goto error;
 	}
 
@@ -355,6 +355,12 @@ static int uio_init(shjpeg_context_t * context, shjpeg_internal_t * data)
 	data->jpeg_lb2 = data->jpeg_lb1 + SHJPEG_JPU_LINEBUFFER_SIZE;
 	// jpeg data
 	data->jpeg_data = data->jpeg_lb2 + SHJPEG_JPU_LINEBUFFER_SIZE;	
+
+	/* initalize virtual buffer base address for software assist mode*/
+	data->jpeg_lb1_virt = data->jpeg_virt +
+		(data->jpeg_lb1 - data->jpeg_phys);
+	data->jpeg_lb2_virt = data->jpeg_virt +
+		(data->jpeg_lb2 - data->jpeg_phys);
 
 	/*
 	 * XXX: just in case, for the pending IRQ from the previous user

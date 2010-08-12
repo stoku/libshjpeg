@@ -36,6 +36,7 @@
 #include "shjpeg_internal.h"
 #include "shjpeg_jpu.h"
 #include "shjpeg_veu.h"
+#include "shjpeg_softhelper.h"
 
 /*
  * Decode using H/W
@@ -54,7 +55,10 @@ decode_hw(shjpeg_internal_t * data,
 	u32 vtrcr = 0;
 	u32 vswpout = 0;
 
+	vmap_data_t mdata;
 	D_ASSERT(data != NULL);
+
+	memset(&mdata, 0, sizeof(mdata));
 
 	D_DEBUG_AT(SH7722_JPEG, "%s( %p, 0x%08lx|%d [%dx%d] %08x )",
 		   __FUNCTION__, data, phys, pitch,
@@ -87,6 +91,9 @@ decode_hw(shjpeg_internal_t * data,
 	case SHJPEG_PF_RGB24:
 		vswpout = 0x70;
 		vtrcr |= (21 << 16) | 2;
+		break;
+
+	case SHJPEG_PF_YCbCr:
 		break;
 
 	default:
@@ -174,8 +181,6 @@ decode_hw(shjpeg_internal_t * data,
 	} else {
 		shjpeg_veu_t veu;
 
-		jpeg.flags |= SHJPEG_JPU_FLAG_CONVERT;
-
 		/* Setup JPU for decoding in line buffer mode. */
 		shjpeg_jpu_setreg32(data, JPU_JINTE,
 				    JPU_JINTS_INS5_ERROR |
@@ -202,27 +207,39 @@ decode_hw(shjpeg_internal_t * data,
 				    SHJPEG_JPU_LINEBUFFER_PITCH);
 
 	/* Setup VEU for conversion/scaling (from line buffer to surface). */
-		memset((void *) &veu, 0, sizeof(shjpeg_veu_t));
+		if (format == SHJPEG_PF_YCbCr) {
+			jpeg.flags |= SHJPEG_JPU_FLAG_SOFTCONVERT;
+			jpeg.soft_offset = jpeg.soft_line = 0;
+			context->pitch = pitch;
+			if (get_frame_buffer_virtual(data, context,
+					&mdata, format, phys) < 0) {
+				return -1;
+			}
+		} else {
+			jpeg.flags |= SHJPEG_JPU_FLAG_CONVERT;
+			/* Setup VEU for conversion/scaling
+				(from line buffer to surface). */
+			memset((void*)&veu, 0, sizeof(shjpeg_veu_t));
+			/* source */
+			veu.src.width   = context->width;
+			veu.src.height  = context->height;
+			veu.src.pitch   = SHJPEG_JPU_LINEBUFFER_PITCH;
 
-		/* source */
-		veu.src.width = context->width;
-		veu.src.height = context->height;
-		veu.src.pitch = SHJPEG_JPU_LINEBUFFER_PITCH;
+			/* destination */
+			veu.dst.width   = context->width;
+			veu.dst.height  = context->height;
+			veu.dst.pitch   = pitch;
+			veu.dst.yaddr   = phys;
+			veu.dst.caddr   = phys + pitch * height;
 
-		/* destination */
-		veu.dst.width = context->width;
-		veu.dst.height = context->height;
-		veu.dst.pitch = pitch;
-		veu.dst.yaddr = phys;
-		veu.dst.caddr = phys + pitch * height;
+			/* transformation parameter */
+			veu.vbssr   = SHJPEG_JPU_LINEBUFFER_HEIGHT;
+			veu.vtrcr   = vtrcr;
+			veu.vswpr   = vswpout | 7;
 
-		/* transformation parameter */
-		veu.vbssr = SHJPEG_JPU_LINEBUFFER_HEIGHT;
-		veu.vtrcr = vtrcr;
-		veu.vswpr = vswpout | 7;
-
-		/* set VEU */
-		shjpeg_veu_init(data, &veu);
+			/* set VEU */
+			shjpeg_veu_init(data, &veu);
+		}
 	}
 
 	D_DEBUG_AT(SH7722_JPEG, " -> starting...");
@@ -279,6 +296,8 @@ decode_hw(shjpeg_internal_t * data,
 				jpeg.buffers &= ~i;
 		}
 	}
+
+	free_frame_buffer_virtual(&mdata);
 
 	/* Unlocking JPU using lockf(3) */
 	if (lockf(data->jpu_uio_fd, F_ULOCK, 0) < 0) {
@@ -707,6 +726,7 @@ shjpeg_decode_run(shjpeg_context_t * context,
 
 		phys = data->jpeg_data;
 	}
+	data->user_jpeg_data = phys;
 
 	context->jpeg_decomp.err = jpeg_std_error(&jerr.pub);
 	jerr.pub.error_exit = jpeglib_panic;
@@ -723,6 +743,7 @@ shjpeg_decode_run(shjpeg_context_t * context,
 	case SHJPEG_PF_RGB16:
 	case SHJPEG_PF_RGB32:
 	case SHJPEG_PF_RGB24:
+	case SHJPEG_PF_YCbCr:
 		break;
 
 	default:

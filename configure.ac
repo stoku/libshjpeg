@@ -48,6 +48,7 @@ else
 	AC_CHECK_LIB([dl], [dlopen],, [AC_MSG_ERROR([libdl not found!])])
 	AC_DEFINE(LIBJPEG_WRAPPER_SUPPORT, 1, [Indicate support of libjpeg wrapper])
 fi
+
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h sys/param.h stdint.h stdlib.h string.h sys/ioctl.h unistd.h jpeglib.h malloc.h])
 
