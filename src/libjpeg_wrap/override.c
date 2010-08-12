@@ -72,9 +72,8 @@ static shjpeg_pixelformat get_shjpeg_pixelformat(J_COLOR_SPACE color_space)
 }
 static boolean is_jpu_supported_decompress(j_decompress_ptr cinfo)
 {
-	    my_src_ptr src = (my_src_ptr) cinfo->src;
 	/*If no file input specified revert to libjpeg */
-	if (!src) {
+	if (!cinfo->src) {
 		return FALSE;
 	}
 	/*We do not support on-the-fly colormapping */
@@ -258,9 +257,8 @@ shjpeg_CreateCompress(j_compress_ptr cinfo, int version, size_t structsize)
 
 static boolean is_jpu_supported_compress(j_compress_ptr cinfo, boolean wat)
 {
-    	my_dest_ptr dest = (my_dest_ptr) cinfo->dest;
 	/*If no file output specified */
-	if (!dest) {
+	if (!cinfo->dest) {
 		return FALSE;
 	}
 	if (!wat)
