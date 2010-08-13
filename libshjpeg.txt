@@ -64,11 +64,27 @@ Compilation
    --enable/--disable-jpeg-wrapper
  * execute 'make' to build the library and test programs
 
-   *NOTE: when compiling with some versions of libjpeg a compile time error 
-    stating that HAVE_STDLIB_H is redefined may occur.  This is a bug in the 
-    libjpeg library and has been corrected on recent versions.  This problem
-    can be solved by changing the definition in jconfig.h to 
+  *libjpeg-62 and earlier releases.
+   -------------------------------
+   This library has been tested with libjpeg versions 62 and 80.  Earlier 
+   versions may or may not work without modification.  It is likely that 
+   some kind of modifications would be necessary. Version 80 can be used 
+   as is with libshjpeg, but the following points must be 
+   observed when using version 62. 
+
+   *NOTE1: when compiling an error stating that HAVE_STDLIB_H is redefined 
+    may occur.  This is a bug in the libjpeg library and has been corrected 
+    on recent versions.  This problem can be solved by changing the definition 
+    in jconfig.h to 
     #define HAVE_STDLIB_H 1
+
+   *NOTE2: decoding files with large amounts of EXIF or other metadata may 
+    fail.  This too, is an omission in the earlier versions of libjpeg that 
+    version 80 users need not worry about.  To fix this problem the libjpeg 
+    code can be patched using the included file and the patch command a 
+    follows.
+
+    patch -p1 < libjpeg6_skipfix.patch
 
 Features
 ========
@@ -76,7 +92,7 @@ The libshjpeg library can decode to and encode from buffers with the following s
 
      * JCS_RGB24 
      * JCS_GRAYSCALE (coming soon - maybe)
-     * JCS_YCrCb (coming soon)
+     * JCS_YCrCb
 
 Additionally the following non-standard libjpeg formats are supported
      * JCS_RGB565 (on Android)

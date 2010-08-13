@@ -1,0 +1,11 @@
+--- jdatasrc.c	1996-01-07 08:26:42.000000000 +0900
++++ ../../jpeg-6b/jdatasrc.c	2010-08-12 18:54:44.000000000 +0900
+@@ -136,7 +136,7 @@
+   if (num_bytes > 0) {
+     while (num_bytes > (long) src->pub.bytes_in_buffer) {
+       num_bytes -= (long) src->pub.bytes_in_buffer;
+-      (void) fill_input_buffer(cinfo);
++      (void) src->pub.fill_input_buffer(cinfo);
+       /* note we assume that fill_input_buffer will never return FALSE,
+        * so suspension need not be handled.
+        */
