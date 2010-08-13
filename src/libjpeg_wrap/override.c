@@ -65,7 +65,7 @@ static shjpeg_pixelformat get_shjpeg_pixelformat(J_COLOR_SPACE color_space)
 	case JCS_GRAYSCALE:
 		//TODO: grayscale support
 	case JCS_YCbCr:
-		//TODO: YUV support
+		return SHJPEG_PF_YCbCr;
 	default:
 		return SHJPEG_PF_NONE;
 	}
@@ -154,7 +154,7 @@ boolean shjpeg_start_decompress(j_decompress_ptr cinfo)
 	   part of the shjpeg_decode_init */
 
 	CALL_API_FUNC(jpeg_calc_output_dimensions, cinfo)
-	    context = shjpeg_init(0);
+	context = shjpeg_init(1);
 	if (!context) {
 		TRACEMS(cinfo, 1, SHJMSG_LIBJPEG_MODE);
 		return libjpeg_hooks.jpeg_start_decompress(cinfo);

@@ -24,6 +24,7 @@
 #include <getopt.h>
 
 unsigned int height, width;
+J_COLOR_SPACE mode = JCS_RGB;
 
 int
 decompress_jpeg_file(char *input, unsigned char **buffer, int verbose, int stdio_src) {
@@ -47,7 +48,7 @@ decompress_jpeg_file(char *input, unsigned char **buffer, int verbose, int stdio
 	jpeg_create_decompress(&cinfo);
 	if (stdio_src) {
 		jpeg_stdio_src(&cinfo, infile);
-	} 
+	}
 #if JPEG_LIB_VERSION >= 80
 	else {
 		struct stat st;
@@ -60,13 +61,14 @@ decompress_jpeg_file(char *input, unsigned char **buffer, int verbose, int stdio
 		fclose(infile);
 		jpeg_mem_src(&cinfo, membuf, st.st_size);
 	}
-#endif 
+#endif
 
 	jpeg_read_header(&cinfo, TRUE);
 	jpeg_calc_output_dimensions(&cinfo);
 
 	height = cinfo.output_height;
 	width = cinfo.output_width;
+        cinfo.out_color_space = mode;
 
 	jpeg_start_decompress(&cinfo);
 
@@ -93,10 +95,12 @@ void
 dump_ppm(char *file, unsigned char *buffer) {
 	FILE *dumpfile = fopen (file, "wb");
 	if (!dumpfile) {
-		fprintf(stderr, "Cannot open dump file %s", file);
+		fprintf(stderr, "Cannot open dump file %s\n", file);
 		return;
 	}
-	fprintf(dumpfile, "P6 %d %d %d\n", width, height, 255);
+	if (mode == JCS_RGB) {
+		fprintf(dumpfile, "P6 %d %d %d\n", width, height, 255);
+	}
 	fwrite(buffer, 1, width*height*3, dumpfile);
 	fclose(dumpfile);
 }
@@ -110,7 +114,7 @@ compress_jpeg_file(char *output, unsigned char *buffer, int verbose, int stdio_s
 #if JPEG_LIB_VERSION >= 80
 	unsigned long buflen = 0;
 	unsigned char *membuf = NULL;
-#endif 
+#endif
 	outfile = fopen (output, "wb");
 	if (!outfile) {
 		fprintf(stderr, "Cannot open output file %s\n", output);
@@ -123,7 +127,7 @@ compress_jpeg_file(char *output, unsigned char *buffer, int verbose, int stdio_s
 	jpeg_create_compress(&cinfo);
 	if (stdio_src) {
 		jpeg_stdio_dest(&cinfo, outfile);
-	} 
+	}
 #if JPEG_LIB_VERSION >= 80
 	else {
 		jpeg_mem_dest(&cinfo, &membuf, &buflen);
@@ -132,8 +136,8 @@ compress_jpeg_file(char *output, unsigned char *buffer, int verbose, int stdio_s
 
 	cinfo.image_width = width;
 	cinfo.image_height = height;
-	cinfo.input_components = 3;  //RGB 3 bpp for now
-	cinfo.in_color_space = JCS_RGB;  //RGB 3 bpp for now
+	cinfo.input_components = 3;
+	cinfo.in_color_space = mode;
 
 	jpeg_set_defaults(&cinfo);
 	jpeg_start_compress(&cinfo, TRUE);
@@ -164,31 +168,32 @@ print_usage(char *argv0) {
 	    "  -h, --help                  this message.\n"
 	    "  -v, --verbose               libjpeg verbose output.\n"
 	    "  -q, --quiet	           no messages from this program.\n"
-	    "  -d[<ppm>], --dump[=<ppm>]   dump decoded image in PPM (default: test.ppm).\n"
+	    "  -d[<ppm>], --dump[=<ppm>]   dump decoded image in PPM/YCbCr (default: test.[ppm/ycbcr]).\n"
 	    "  -r<times>, --repeat=<times> reconvert the data n times to look for cumulative effects\n"
-	    "  -t<file>, --tmpfile=<file>  temporary file to use for reconversions\n");
+	    "  -t<file>, --tmpfile=<file>  temporary file to use for reconversions\n"
+	    "  -y, --yuv                   decode to JCS_YCbCr format\n");
 #if JPEG_LIB_VERSION >= 80
     fprintf(stderr,
-	    "  -m, --mem 		   use jpeg_mem_* as data source and destination\n"
+	    "  -m, --mem		   use jpeg_mem_* as data source and destination\n"
 	    "  -s, --stdio                 use jpeg_stdio_* as data src/dest (default)\n");
-#endif 
+#endif
 }
 
 int
 main(int argc, char *argv[])
 {
     char		  *input, *output;
-    char		  *dumpfn = "test.ppm";
-    char 		  filename[200];
+    char		  *dumpfn = NULL;
+    char		  filename[200];
     int			   verbose = 0;
     int			   dump = 0;
     int			   quiet = 0;
     int			   repeat = 0;
     unsigned char	   *buffer = NULL;
-    char 		   *argv0 = NULL;
-    char 		   *pingpong = "pingpong.jpg";
-    int 		   repcount;
-    int 		   stdio_src = 1;
+    char		   *argv0 = NULL;
+    char		   *pingpong = "pingpong.jpg";
+    int		   repcount;
+    int		   stdio_src = 1;
 
     argv0 = argv[0];
 
@@ -204,10 +209,11 @@ main(int argc, char *argv[])
 	    {"mem", 0, 0, 'm'},
 	    {"stdio", 0, 0, 's'},
 	    {"tmpfile", 1, 0, 't'},
+	    {"yuv", 0, 0, 'y'},
 	    {0, 0, 0, 0}
 	};
 
-	if ((c = getopt_long(argc, argv, "hvd::qr:mst",
+	if ((c = getopt_long(argc, argv, "hvd::qr:msty",
 			     long_options, &option_index)) == -1)
 	    break;
 
@@ -246,6 +252,10 @@ main(int argc, char *argv[])
 	    stdio_src = 0;
 	    break;
 
+	case 'y':
+	    mode = JCS_YCbCr;
+	    break;
+
 	default:
 	    fprintf(stderr, "unknown option 0%x.\n", c);
 	    print_usage(argv0);
@@ -261,10 +271,10 @@ main(int argc, char *argv[])
     /* check option */
     input = argv[optind++];
     if (argv[optind])
-	output = argv[optind];
+	    output = argv[optind];
     else {
-	snprintf(filename, sizeof(filename), "%s.out", input);
-	output = filename;
+	    snprintf(filename, sizeof(filename), "%s.out", input);
+	    output = filename;
     }
     if (!quiet) {
 	printf("Input file = %s\n", input);
@@ -272,25 +282,35 @@ main(int argc, char *argv[])
 	printf("Temp file = %s\n", pingpong);
 	printf("Mode = %s\n", stdio_src ? "STDIO" : "memory");
     }
+
     if (decompress_jpeg_file(input, &buffer, verbose, stdio_src) < 0)  {
 	fprintf(stderr, "Error on file decode\n");
 	return -1;
     }
+
     if (dump) {
+	if (!dumpfn)  {
+		dumpfn = malloc (11);
+		snprintf(dumpfn, 11, "test.%s", mode == JCS_RGB ? "ppm" : "ycbcr");
+		dump_ppm(dumpfn, buffer);
+		free (dumpfn);
+	}
 	dump_ppm(dumpfn, buffer);
     }
+
     for (repcount=0; repcount < repeat; repcount++) {
 
-    	if (compress_jpeg_file(pingpong, buffer, 0, stdio_src) < 0)  {
+	if (compress_jpeg_file(pingpong, buffer, 0, stdio_src) < 0)  {
 		fprintf(stderr, "Error on file encode\n");
 		return -1;
-    	}
-    	free (buffer);
-    	if (decompress_jpeg_file(pingpong, &buffer, 0, stdio_src) < 0)  {
+	}
+	free (buffer);
+	if (decompress_jpeg_file(pingpong, &buffer, 0, stdio_src) < 0)  {
 		fprintf(stderr, "Error on file decode\n");
 		return -1;
 	}
     }
+
     if (compress_jpeg_file(output, buffer, verbose, stdio_src) < 0)  {
 	fprintf(stderr, "Error on file encode\n");
 	return -1;

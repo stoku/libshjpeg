@@ -100,6 +100,7 @@ typedef enum {
     SHJPEG_PF_NV12  = SHJPEG_PIXELFORMAT(4, 1, 12, 3),		/*!< NV12 pixel format. */
     SHJPEG_PF_NV16  = SHJPEG_PIXELFORMAT(5, 1, 16, 4),		/*!< NV16 pixel format. */
     SHJPEG_PF_GRAYSCALE = SHJPEG_PIXELFORMAT(6, 1, 12, 3),	/*!< Y8 pixel format. */
+    SHJPEG_PF_YCbCr = SHJPEG_PIXELFORMAT(7, 3, 24, 2),	/*!< YUV 4:4:4 pixel format */
 } shjpeg_pixelformat;
 
 /**

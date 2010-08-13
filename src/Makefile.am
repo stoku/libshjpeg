@@ -20,6 +20,7 @@ libshjpeg_la_SOURCES = \
 	shjpeg_jpu.c \
 	shjpeg_decode.c \
 	shjpeg_encode.c \
+	shjpeg_softhelper.c \
 	shjpeg_internal.h \
 	shjpeg_utils.h \
 	shjpeg_regs.h \
