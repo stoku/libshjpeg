@@ -10,8 +10,7 @@ acceleration capabilities of Renesas's SH7772/4 SoC provided JPU
 
 Obtaining libshjpeg
 ==================
-The source files for libshjpeg can be found online at http://github.com/thayama/libshjpeg
-where they may be downloaded in a tarball or using git.  
+The source files for libshjpeg can be found online at http://github.com/dhobsong/libshjpeg where they may be downloaded in a tarball or using git.  
 
 libjpeg Licensing
 =================
@@ -50,6 +49,16 @@ before compiling.
 Compilation
 ===========
 
+ * Ensure that the libjpeg library is installed and properly working on your
+   target platfomr.  libjpeg can be downloaded from severayl sources including
+   http://www.ijg.org/files/  older versions may be archived at other sites,
+   such as http://sourceforge.net.  A example of how to compile libjpeg
+   follows in the Compilation Example section
+
+ * Once libjpeg is compiled and installed confirm the existence of jconfig.h
+   and jversion.h.  You may need to recompile and re-install libjpeg to
+   generate these files.
+
  * Set the environment variable LIBJPEG_INC_PATH to the directory containing 
    the libjpeg source files for the version that you want to use.
  
@@ -62,7 +71,8 @@ Compilation
    interface will be compiled if the variable of LIBJPEG_INC_PATH is set. 
    Alternatively this value can be specified with the configure option 
    --enable/--disable-jpeg-wrapper
- * execute 'make' to build the library and test programs
+ * execute 'make' to build the library and test programs and 'make install'
+   to install them
 
   *libjpeg-62 and earlier releases.
    -------------------------------
@@ -85,6 +95,58 @@ Compilation
     follows.
 
     patch -p1 < libjpeg6_skipfix.patch
+
+   *NOTE3: The --host cross-comilation option for configue in libjpeg-6b
+    does not function correctly.  Instead, the CC option should be used
+    to specify the cross compiler
+
+    CC=arm-linux-gnueadi-gcc ./configure --enable-shared
+
+Compilation Examples
+====================
+The following examples show the commands necessary to compile libshjpeg and
+the libjpeg settings that are necesary. Either libjpeg-6b or libjpeg-8b must
+be compied BEFORE libshjpeg can be compiled.
+
+libjpeg-6b (option 1)
+---------------------
+Assuming that the libjpeg-6b source files are located in <path>/jpeg-6b and
+the libshjpeg source files are located in <path>/shjpeg
+
+/# cd <path>/jpeg-6b
+<path>/jpeg-6b# cp <path>/shjpeg/libjpeg6_skipfix.patch .
+<path>/jpeg-6b# patch -p1 < libjpeg6_skipfix.patch
+<path>/jpeg-6b# CC=arm-linux-gnueabi-gcc ./configure --enable-shared
+<path>/jpeg-6b# make
+<path>/jpeg-6b# make install
+<path>/jpeg-6b# edit jconfig.h (see Note 1 in compilation)
+<path>/jpeg-6b# export LIBJPEG_INC_PATH=<path>/jpeg-6b
+
+libjpeg-8b (option 2)
+---------------------
+Assuming that the libjpeg-8b source files are located in <path>/jpeg-8b
+
+/# cd <path>/jpeg-8b
+<path>/jpeg-8b# ./configure --host=arm-linux-gnueabi
+<path>/jpeg-8b# make
+<path>/jpeg-8b# make install
+<path>/jpeg-8b# export LIBJPEG_INC_PATH=<path>/jpeg-8b
+
+libshjpeg
+---------
+Assuming that the libshjpeg source files are located in <path>/shjpeg
+
+**check that LIBJPEG_INC_PATH points to the correct libjpeg directory.**
+
+/# cd <path>/shjpeg
+<path>/shjpeg# cd gen
+<path>/shjpeg/gen# ./genapi
+<path>/shjpeg/gen# cd ..
+<path>/shjpeg# autoreconf -vif
+<path>/shjpeg# ./configure --host=arm-linux-gnueabi
+<path>/shjpeg# export echo=/bin/echo
+<path>/shjpeg# make
+<path>/shjpeg# make install
 
 Features
 ========
