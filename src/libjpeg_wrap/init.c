@@ -22,6 +22,7 @@
 
 #include "override.h"
 #include <stdio.h>
+#include <string.h>
 #include "dlfcn.h"
 
 hooks_t libjpeg_hooks, *active_hooks, withjpu_hooks, jpumode_hooks;
@@ -69,13 +70,27 @@ void __attribute__ ((constructor)) init_lib(void)
 	void (**fn_handle) (void) = &libjpeg_hooks.unimplemented;
 	void (**wjpu_handle) (void) = &withjpu_hooks.unimplemented;
 	void (**jpumode_handle) (void) = &jpumode_hooks.unimplemented;
-	lib_handle = dlopen("libjpeg.so", RTLD_NOW | RTLD_LOCAL);
+	char libname[15];
+	switch (JPEG_LIB_VERSION) {
+		case 62:
+		default:
+			strncpy(libname, "libjpeg.so.62", 14);
+			break;
+		case 80:
+			strncpy(libname, "libjpeg.so.8", 13);
+			break;
+	}
+	lib_handle = dlopen(libname, RTLD_NOW | RTLD_LOCAL);
 
 	if (!lib_handle) {
-		printf("cannot open shared libjpeg library library: %s\n",
-		       "libjpeg.so");
-		exit(-1);
+		lib_handle = dlopen("libjpeg.so", RTLD_NOW | RTLD_LOCAL);
+		if (!lib_handle) {
+			printf("cannot open shared libjpeg library:"
+				"%s\n", "libjpeg.so");
+			exit(-1);
+		}
 	}
+
 	*fn_handle = *wjpu_handle = *jpumode_handle = &libjpeg_unimplented;
 	fn_handle++;
 	wjpu_handle++;
