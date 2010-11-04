@@ -27,6 +27,9 @@
 #include <stdint.h>
 
 #include <jpeglib.h>
+#ifdef HAVE_STDLIB_H   
+#  undef HAVE_STDLIB_H //conflicts when using libjpeg version 6x
+#endif
 #include "config.h"
 /**
  * \file shjpeg_types.h
