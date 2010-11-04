@@ -4,7 +4,7 @@
 
 AM_CPPFLAGS = $(INCLTDL) -I$(top_srcdir)/include
 if MAKE_JPEG_WRAPPER
-AM_CPPFLAGS +=	-I$(LIBJPEG_INC_PATH)
+AM_CPPFLAGS +=	-I$(libjpeg_inc_path)
 endif
 AM_CFLAGS = -Wall -Werror
 
@@ -33,8 +33,8 @@ libshjpeg_la_SOURCES += \
 	libjpeg_wrap/override.c \
 	libjpeg_wrap/jpeg_io.c \
 	libjpeg_wrap/hooks/hooks.c \
-	libjpeg_wrap/libjpeg_api/jconfig.c \
-	libjpeg_wrap/libjpeg_api/jerror.c \
-	libjpeg_wrap/libjpeg_api/jpeglib.c \
-	libjpeg_wrap/libjpeg_api/jmorecfg.c
+	libjpeg_wrap/libjpeg_api/jpegapi.c
 endif
+#	libjpeg_wrap/libjpeg_api/jerror.c \
+#	libjpeg_wrap/libjpeg_api/jconfig.c \
+#	libjpeg_wrap/libjpeg_api/jmorecfg.c
