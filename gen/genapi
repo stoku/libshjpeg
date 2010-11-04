@@ -6,7 +6,13 @@ if [ ! -d temp ]; then
 	mkdir temp
 fi
 #filelist=`grep -l "EXTERN(" $LIBJPEG_INC_PATH/*.h`
-filelist="$LIBJPEG_INC_PATH/jerror.h $LIBJPEG_INC_PATH/jmorecfg.h $LIBJPEG_INC_PATH/jconfig.h $LIBJPEG_INC_PATH/jpeglib.h"
+#filelist="$LIBJPEG_INC_PATH/jerror.h $LIBJPEG_INC_PATH/jmorecfg.h $LIBJPEG_INC_PATH/jconfig.h $LIBJPEG_INC_PATH/jpeglib.h"
+filelist="$LIBJPEG_INC_PATH/jerror.h $LIBJPEG_INC_PATH/jpeglib.h"
+backpath=`pwd`
+runpath=`dirname $0`
+cd $runpath
+rm ../jvercheck.h
 ./get_externs $filelist
 bases=`echo $filelist | sed "s_[^ ]*/\([^ ]\+\)_temp/\1_g"`
 cat `echo $bases | sed s_\\\.h_.in_g` > "../include/libjpeg_wrap/entries.in"
+cd $backpath
