@@ -248,9 +248,11 @@ main(int argc, char *argv[])
 	    stdio_src = 1;
 	    break;
 
+#if JPEG_LIB_VERSION >= 80
 	case 'm':
 	    stdio_src = 0;
 	    break;
+#endif
 
 	case 'y':
 	    mode = JCS_YCbCr;
