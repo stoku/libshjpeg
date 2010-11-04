@@ -7,7 +7,7 @@ Run 'autoreconf -vif' to create 'configure'.
 Then, run ./configure. You must have libjpeg in order to compile
 properly.
 
-You can find 3 sample codes in ./tests/ directory. Possible options
+You can find 4 sample codes in ./tests/ directory. Possible options
 on these sample codes can be found by giving '--help' as a command
 line option.
 

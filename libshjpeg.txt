@@ -1,7 +1,5 @@
-Version 1.3
-===========
-
-New libjpeg compatibility introduced.  
+Version 1.3.1
+=============
 
 Using this version of libshjpeg with the libjpeg compatibility enabled will 
 allow programs designed for use with libjpeg to transparently use the hardware 
@@ -10,7 +8,7 @@ acceleration capabilities of Renesas's SH7772/4 SoC provided JPU
 
 Obtaining libshjpeg
 ==================
-The source files for libshjpeg can be found online at http://github.com/dhobsong/libshjpeg where they may be downloaded in a tarball or using git.  
+The source files for libshjpeg can be found online at http://github.com/dhobsong/libshjpeg (version tag v1.3.1) where they may be downloaded in a tarball or using git.  
 
 libjpeg Licensing
 =================
@@ -50,27 +48,17 @@ Compilation
 ===========
 
  * Ensure that the libjpeg library is installed and properly working on your
-   target platfomr.  libjpeg can be downloaded from severayl sources including
+   target platform.  libjpeg can be downloaded from several sources including
    http://www.ijg.org/files/  older versions may be archived at other sites,
    such as http://sourceforge.net.  A example of how to compile libjpeg
    follows in the Compilation Example section
 
- * Once libjpeg is compiled and installed confirm the existence of jconfig.h
-   and jversion.h.  You may need to recompile and re-install libjpeg to
-   generate these files.
-
- * Set the environment variable LIBJPEG_INC_PATH to the directory containing 
-   the libjpeg source files for the version that you want to use.
- 
- * execute 'gen/genapi' to create the libjpeg compatible API based on the 
-   libjpeg version specified in LIBJPEG_INC_PATH
- 
  * execute 'autoreconf -vif' to generate a configure file
 
- * execute 'configure' with any desired options.  The libjpeg compatible 
-   interface will be compiled if the variable of LIBJPEG_INC_PATH is set. 
-   Alternatively this value can be specified with the configure option 
-   --enable/--disable-jpeg-wrapper
+ * execute 'configure' with any desired options.  The path to the libjpeg
+   library headers used in compilation can be changed with
+   --with-libjpeg-path=<path>
+
  * execute 'make' to build the library and test programs and 'make install'
    to install them
 
@@ -82,21 +70,15 @@ Compilation
    as is with libshjpeg, but the following points must be 
    observed when using version 62. 
 
-   *NOTE1: when compiling an error stating that HAVE_STDLIB_H is redefined 
-    may occur.  This is a bug in the libjpeg library and has been corrected 
-    on recent versions.  This problem can be solved by changing the definition 
-    in jconfig.h to 
-    #define HAVE_STDLIB_H 1
-
-   *NOTE2: decoding files with large amounts of EXIF or other metadata may 
-    fail.  This too, is an omission in the earlier versions of libjpeg that 
+   *NOTE1: decoding files with large amounts of EXIF or other metadata may
+    fail.  This is an omission in the earlier versions of libjpeg that
     version 80 users need not worry about.  To fix this problem the libjpeg 
     code can be patched using the included file and the patch command a 
     follows.
 
     patch -p1 < libjpeg6_skipfix.patch
 
-   *NOTE3: The --host cross-comilation option for configue in libjpeg-6b
+   *NOTE2: The --host cross-comilation option for configue in libjpeg-6b
     does not function correctly.  Instead, the CC option should be used
     to specify the cross compiler
 
@@ -119,8 +101,6 @@ the libshjpeg source files are located in <path>/shjpeg
 <path>/jpeg-6b# CC=arm-linux-gnueabi-gcc ./configure --enable-shared
 <path>/jpeg-6b# make
 <path>/jpeg-6b# make install
-<path>/jpeg-6b# edit jconfig.h (see Note 1 in compilation)
-<path>/jpeg-6b# export LIBJPEG_INC_PATH=<path>/jpeg-6b
 
 libjpeg-8b (option 2)
 ---------------------
@@ -130,37 +110,59 @@ Assuming that the libjpeg-8b source files are located in <path>/jpeg-8b
 <path>/jpeg-8b# ./configure --host=arm-linux-gnueabi
 <path>/jpeg-8b# make
 <path>/jpeg-8b# make install
-<path>/jpeg-8b# export LIBJPEG_INC_PATH=<path>/jpeg-8b
 
 libshjpeg
 ---------
 Assuming that the libshjpeg source files are located in <path>/shjpeg
 
-**check that LIBJPEG_INC_PATH points to the correct libjpeg directory.**
-
 /# cd <path>/shjpeg
-<path>/shjpeg# cd gen
-<path>/shjpeg/gen# ./genapi
-<path>/shjpeg/gen# cd ..
 <path>/shjpeg# autoreconf -vif
-<path>/shjpeg# ./configure --host=arm-linux-gnueabi
-<path>/shjpeg# export echo=/bin/echo
+<path>/shjpeg# ./configure --host=arm-linux-gnueabi 
 <path>/shjpeg# make
 <path>/shjpeg# make install
+
+To compile with a different libjpeg version that the system default, change 
+the above ./configure command to:
+
+<path>/shjpeg# ./configure --host=arm-linux-gnueabi --with-libjpeg-path=<path
+    to libjpeg headers>
+<path>/shjpeg# make clean
+
+
+
+Memory Allocation
+=================
+The JPU can only decode files up to a size that will fit in a continuous
+memory chunk.  A memory chunk can be assigned to the JPU by specifying
+'memchunk.jpu=<size>m' (e.g. memchunk.jpu=8m for an 8MiB chunk) in the kernel
+boot cmdline.
+
+Running Tests
+=============
+The test file libjpegtest is included with this distribution.
+To execute the test perform the following:
+
+$ export LD_LIBRARY_PATH=/usr/local/lib (if not already set)
+$ libjpegtest <input>.jpg
+
+to decode and re-encode a jpeg file.  The other options supported by
+libjpegtest can be seen from the command line by typing.
+$ libjpegtest -h
 
 Features
 ========
 The libshjpeg library can decode to and encode from buffers with the following standard libjpeg colour coding
 
      * JCS_RGB24 
-     * JCS_GRAYSCALE (coming soon - maybe)
      * JCS_YCrCb
 
 Additionally the following non-standard libjpeg formats are supported
      * JCS_RGB565 (on Android)
      * JCS_RGBA888 (on Android)
 
-As well as the following when using the direct hardware interface
+As well as the following when using the direct hardware interface (not
+via libjpeg)
+
      * NV12
      * NV16
 
@@ -195,12 +197,21 @@ Limitations
 	There is no support to force color data to grayscale output yet. 
 	Likewise all output compression level cannot be adjusted.
 
+  * EXIF/metadata support with libjpeg-62
+	Due to a bug in the implementation of libjpeg version 62, JPEG images
+	containing large amounts of EXIF or other meta data may not be
+	properly decoded through the libjpeg interface of libshjpeg.
+	Upgrading to a newer version or recompiling libjpeg-62 with the 
+	patch supplied in this package will enable the metadata support. 
+	(See "Compilation" for details)
+
 Errors, Warnings, Information messages
 ======================================
 
 The libjpeg interface of libshjpeg adds its information messages to the same 
-mechanism used for libjpeg.  Messages are delivered either through jpeg_std_error 
-the user specified error handler in the same way that libjpeg messages are. 
+mechanism used for libjpeg.  Messages are delivered either through
+jpeg_std_error the user specified error handler in the same way that libjpeg
+messages are.
 Trace messages are dispatched at error message level 1 by default.
 The direct JPU access interface delivers messages to stderr.  
 
