@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = include src doc tests
+SUBDIRS = gen include src doc tests
 
 # pkg-config
 pkgconfigdir = $(libdir)/pkgconfig

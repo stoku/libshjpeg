@@ -14,11 +14,11 @@ foreach $infile (@ARGV) {
 	print APIC "#include \"libjpeg_wrap/hooks.h\"\n";
 	print APIC "extern hooks_t *active_hooks;\n";
 	while(<INFILE>) {
-		if (/^EXTERN\((.+)\)\s+(.*)/) {
-			print "$1:";
-			$rettype = $1;
-			$fs = $2;
-			if ($2 !~ /;\s*$/) {
+		if (/^extern ([^\s]+)\s+(.*)/) {
+#			print "$1:";
+#			$rettype = $1;
+			$fs = $_;
+			if ($_ !~ /;\s*$/) {
 				$readagain = 1;
 				while ($readagain) {
 					$fs =~ s/\s+$//;
@@ -31,10 +31,11 @@ foreach $infile (@ARGV) {
 				}
 			}
 			$fs =~ s/\s+$//;
-			$fs =~ m/(\S+)\s*JPP\s*\(\((.*)\)\)/;
-			$fname = $1;
-		        $args = $2;
-			print "$fname:$args\n";
+			$fs =~ m/extern\s+(.+)\s+(\S+)\s*\((.*)\)/;
+			$rettype = $1;
+			$fname = $2;
+		        $args = $3;
+			print "$rettype:$fname:$args\n";
 			@args = split ',', $args;
 			print APIENT "SHLIBJPEG_API($rettype, $fname";
 			print APIC "$rettype $fname($args) {\n";
