@@ -28,7 +28,6 @@
   code and any user defined ones (the documentation suggests applications
   start their indices at 1000).*/
 
-#include <jversion.h>
 #ifndef JERROR_H
 #include <jerror.h>
 #endif

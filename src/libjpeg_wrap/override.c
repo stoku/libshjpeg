@@ -359,8 +359,9 @@ void shjpeg_finish_compress(j_compress_ptr cinfo)
 
 /*redefine the error message table as a concatenation of the standard
   errors and our newly defined ones*/
-
-const char *const shjpeg_message_table[] = {
+#define JVERSION NULL
+#define JCOPYRIGHT NULL
+const char *shjpeg_message_table[] = {
 #define JMESSAGE(code,string)   string ,
 #include <jerror.h>
 #define JMESSAGE(code,string)   "SHJPEG: "string ,
@@ -372,6 +373,13 @@ struct jpeg_error_mgr *shjpeg_std_error(struct jpeg_error_mgr *err)
 {
 	struct jpeg_error_mgr *ret;
 	ret = libjpeg_hooks.jpeg_std_error(err);
+
+	shjpeg_message_table[JMSG_VERSION - JMSG_NOMESSAGE] =
+		err->jpeg_message_table[JMSG_VERSION - JMSG_NOMESSAGE];
+
+	shjpeg_message_table[JMSG_COPYRIGHT - JMSG_NOMESSAGE] =
+		err->jpeg_message_table[JMSG_COPYRIGHT - JMSG_NOMESSAGE];
+
 	ret->jpeg_message_table = shjpeg_message_table;
 	ret->last_jpeg_message = (int) SHJMSG_LASTMSGCODE - 1;
 	return ret;
