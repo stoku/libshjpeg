@@ -86,15 +86,15 @@ static boolean is_jpu_supported_decompress(j_decompress_ptr cinfo)
 		return FALSE;
 
 	/*Use shjpeg unless 4:4:4 colour mode */
-	if (cinfo->out_color_space == JCS_YCbCr &&
-	    (cinfo->comp_info[1].h_samp_factor ==
+	if (cinfo->jpeg_color_space != JCS_YCbCr ||
+	    ((cinfo->comp_info[1].h_samp_factor ==
 	     cinfo->comp_info[0].h_samp_factor) &&
 	    (cinfo->comp_info[1].v_samp_factor ==
 	     cinfo->comp_info[0].v_samp_factor) &&
 	    (cinfo->comp_info[2].h_samp_factor ==
 	     cinfo->comp_info[0].h_samp_factor) &&
 	    (cinfo->comp_info[2].v_samp_factor ==
-	     cinfo->comp_info[0].v_samp_factor))
+	     cinfo->comp_info[0].v_samp_factor)))
 		return FALSE;
 
 	return TRUE;
