@@ -26,6 +26,23 @@
 unsigned int height, width;
 J_COLOR_SPACE mode = JCS_RGB;
 
+#if JPEG_LIB_VERSION == 62
+void my_skip_input_data (j_decompress_ptr cinfo, long num_bytes)
+{
+  if (num_bytes > 0) {
+    while (num_bytes > (long) cinfo->src->bytes_in_buffer) {
+      num_bytes -= (long) cinfo->src->bytes_in_buffer;
+      (void) cinfo->src->fill_input_buffer(cinfo);
+      /* note we assume that fill_input_buffer will never return FALSE,
+       * so suspension need not be handled.
+       */
+    }
+    cinfo->src->next_input_byte += (size_t) num_bytes;
+    cinfo->src->bytes_in_buffer -= (size_t) num_bytes;
+  }
+}
+#endif
+
 int
 decompress_jpeg_file(char *input, unsigned char **buffer, int verbose, int stdio_src) {
 	FILE *infile = fopen(input, "rb");
@@ -61,6 +78,13 @@ decompress_jpeg_file(char *input, unsigned char **buffer, int verbose, int stdio
 		fclose(infile);
 		jpeg_mem_src(&cinfo, membuf, st.st_size);
 	}
+#endif
+
+/*Workaround for libjpeg62 to be able to process EXIF data through
+  libshjpeg*/
+
+#if JPEG_LIB_VERSION == 62
+	cinfo.src->skip_input_data = my_skip_input_data;
 #endif
 
 	jpeg_read_header(&cinfo, TRUE);
