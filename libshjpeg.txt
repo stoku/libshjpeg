@@ -72,13 +72,20 @@ Compilation
 
    *NOTE1: decoding files with large amounts of EXIF or other metadata may
     fail.  This is an omission in the earlier versions of libjpeg that
-    version 80 users need not worry about.  To fix this problem the libjpeg 
-    code can be patched using the included file and the patch command a 
-    follows.
+    version 80 users need not worry about.
+    There are two options to fix this problem.
+    Option 1:  Update application code
+	See "libjpeg62 Application Workaround" section
+    Option 2:  Patch libjpeg62
+	The libjpeg code can be patched using the included file 
+	and the patch command a follows.
 
-    patch -p1 < libjpeg6_skipfix.patch
+	    patch -p1 < libjpeg6_skipfix.patch
 
-   *NOTE2: The --host cross-comilation option for configue in libjpeg-6b
+	The libjpeg62 will then need to be recompiled and re-installed to 
+	be of use
+
+   *NOTE2: The --host cross-compilation option for configue in libjpeg-6b
     does not function correctly.  Instead, the CC option should be used
     to specify the cross compiler
 
@@ -203,7 +210,46 @@ Limitations
 	properly decoded through the libjpeg interface of libshjpeg.
 	Upgrading to a newer version or recompiling libjpeg-62 with the 
 	patch supplied in this package will enable the metadata support. 
-	(See "Compilation" for details)
+	(See "Compilation" for details).  Applications can also be written 
+	to bypass the offending code.  See "libjpeg62 Application Workaround" 
+	for more details.
+
+libjpeg62 Application Workaround
+================================
+Applications can override the skip_input_data function callback in
+the jpeg_source_mgr to point to a corrected version of the function.
+
+The override is performed by 
+
+	<code>
+        jpeg_stdio_src(&cinfo, infile); (or custom jpeg_source_mgr init)
+	...
+	cinfo.src->skip_input_data = my_skip_input_data;
+ 	</code>
+
+where my_skip_input_data is a pointer to a function such as:
+
+	<code>
+	void my_skip_input_data (j_decompress_ptr cinfo, long num_bytes)
+	{
+	  if (num_bytes > 0) {
+    	    while (num_bytes > (long) cinfo->src->bytes_in_buffer) {
+              num_bytes -= (long) cinfo->src->bytes_in_buffer;
+              (void) cinfo->src->fill_input_buffer(cinfo);
+            }
+            cinfo->src->next_input_byte += (size_t) num_bytes;
+            cinfo->src->bytes_in_buffer -= (size_t) num_bytes;
+          }
+        }
+	</code>
+
+where the important points are: 
+   *  all state (eg. next_input_byte, bytes_in_buffer, etc) 
+      is saved in the jpeg_source_mgr 
+   *  file read is via the fill_input_buffer function registered 
+      in the jpeg_source_mgr
+
+Please see tests/libjpeg_test.c for a working example of this.
 
 Errors, Warnings, Information messages
 ======================================
