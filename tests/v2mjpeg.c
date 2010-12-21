@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
 
     /* set sops callbacks */
     ctx->sops = &my_sops;
-    ctx->private = &data;
+    ctx->priv_data = &data;
 
     /* now ready to capture */
     if (!quiet)

@@ -19,6 +19,10 @@
 #ifndef __shjpeg_h__
 #define __shjpeg_h__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <shjpeg/shjpeg_types.h>
 
 /**
@@ -203,5 +207,9 @@ int shjpeg_encode(shjpeg_context_t	*context,
 		  int		         width,
 		  int           	 height,
 		  int                    pitch);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !__shjpeg_h__ */

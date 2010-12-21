@@ -116,7 +116,7 @@ encode_hw(shjpeg_internal_t * data,
 	D_DEBUG_AT(SH7722_JPEG, "	 -> opening file for writing...");
 
 	if (context->sops->init)
-		context->sops->init(context->private);
+		context->sops->init(context->priv_data);
 
 	D_DEBUG_AT(SH7722_JPEG, "	 -> setting...");
 
@@ -272,7 +272,7 @@ encode_hw(shjpeg_internal_t * data,
 				    (void *) data->jpeg_virt + (i - 1) *
 						SHJPEG_JPU_RELOAD_SIZE;
 				len = amount;
-				context->sops->write(context->private,
+				context->sops->write(context->priv_data,
 						     &len, ptr);
 				written += len;
 			}

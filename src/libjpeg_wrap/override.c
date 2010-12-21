@@ -188,7 +188,7 @@ boolean shjpeg_start_decompress(j_decompress_ptr cinfo)
 
 	cictxt.cinfo = (j_common_ptr) cinfo;
 	cictxt.context = context;
-	context->private = (void *) &cictxt;
+	context->priv_data = (void *) &cictxt;
 
 	format = get_shjpeg_pixelformat(cinfo->out_color_space);
 
@@ -232,7 +232,7 @@ boolean shjpeg_finish_decompress(j_decompress_ptr cinfo)
 		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
 	}
 	if (context->sops->finalize) {
-		context->sops->finalize(context->private);
+		context->sops->finalize(context->priv_data);
 	}
 	context->active_object = NULL;
 	active_hooks = &withjpu_hooks;
@@ -308,7 +308,7 @@ void shjpeg_start_compress(j_compress_ptr cinfo, boolean write_all_tables)
 	cictxt.cinfo = (j_common_ptr) cinfo;
 	cictxt.context = context;
 
-	context->private = (void *) &cictxt;
+	context->priv_data = (void *) &cictxt;
 
 	context->active_object = (j_common_ptr) cinfo;
 	active_hooks = &jpumode_hooks;
@@ -348,7 +348,7 @@ void shjpeg_finish_compress(j_compress_ptr cinfo)
 		ERREXIT(cinfo, SHJMSG_COMPRESS_ERR);
 	}
 	if (context->sops->finalize) {
-		context->sops->finalize(context->private);
+		context->sops->finalize(context->priv_data);
 	}
 	active_hooks = &withjpu_hooks;
 }
