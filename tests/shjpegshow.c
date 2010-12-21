@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
 		    dirent->d_name, strerror(errno));
 	    return 1;
 	}
-	context->private = (void *) &fd;
+	context->priv_data = (void *) &fd;
 
 	/* see if we can decode this file */
 	fprintf(stderr, "initializing decoder\n");

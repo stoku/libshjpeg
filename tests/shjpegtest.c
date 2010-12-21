@@ -413,7 +413,7 @@ main(int argc, char *argv[])
 
     /* set callbacks to context */
     context->sops = &my_sops;
-    context->private = (void*)&fd;
+    context->priv_data = (void*)&fd;
     context->libjpeg_disabled = disable_libjpeg;
 
     /* init decoding */

@@ -124,7 +124,7 @@ struct shjpeg_stream_ops_struct {
       \param [in] private user data.
       \return should return 0 if success, otherwise non-zero value.
      */
-    int (*init)(void *private);
+    int (*init)(void *priv_user_data);
 
     //! A method to read JPEG data.
     /*!
@@ -133,7 +133,7 @@ struct shjpeg_stream_ops_struct {
       \param [in] dataptr a pointer to the buffer to be filled.
       \return should return 0 if success, otherwise non-zero value.
      */
-    int	(*read)(void *private, size_t *nbytes, void *dataptr);
+    int	(*read)(void *priv_user_data, size_t *nbytes, void *dataptr);
 
     //! A method to write JPEG data.
     /*!
@@ -142,13 +142,13 @@ struct shjpeg_stream_ops_struct {
       \param [in] dataptr a pointer to the buffer to be writen.
       \return should return 0 if success, otherwise non-zero value.
      */
-    int	(*write)(void *private, size_t *nbytes, void *dataptr);
+    int	(*write)(void *priv_user_data, size_t *nbytes, void *dataptr);
 
     //! A method to finalize JPEG data.
     /*!
       \param [in] private user data.
      */
-    void (*finalize)(void *private);
+    void (*finalize)(void *priv_user_data);
 };
 
 /**
@@ -207,7 +207,7 @@ struct shjpeg_context_struct {
     shjpeg_sops	*sops;
 
     //! User defined private data
-    void	*private;
+    void	*priv_data;
 
     //! libshjpeg private data
     void	*internal_data;

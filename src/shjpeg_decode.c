@@ -123,7 +123,7 @@ decode_hw(shjpeg_internal_t * data,
 	}
 
 	len = SHJPEG_JPU_RELOAD_SIZE;
-	ret = context->sops->read(context->private, &len,
+	ret = context->sops->read(context->priv_data, &len,
 				  (void *) data->jpeg_virt);
 	if (ret) {
 		D_DERROR(ret,
@@ -276,8 +276,8 @@ decode_hw(shjpeg_internal_t * data,
 				len = SHJPEG_JPU_RELOAD_SIZE;
 				ptr = (void *) data->jpeg_virt +
 				    (i - 1) * SHJPEG_JPU_RELOAD_SIZE;
-				ret = context->sops->read(context->
-							private, &len, ptr);
+				ret = context->sops->read(context->priv_data,
+							&len, ptr);
 				if (ret) {
 					D_DERROR(ret,
 						 "libshjpeg: Can't fill %s "
@@ -503,7 +503,7 @@ static void shjpeg_libjpeg_init_source(j_decompress_ptr cinfo)
 	    (shjpeg_context_t *) cinfo->client_data;
 
 	if (context->sops->init)
-		context->sops->init(context->private);
+		context->sops->init(context->priv_data);
 }
 
 /*
@@ -518,7 +518,7 @@ static boolean shjpeg_libjpeg_fill_input_buffer(j_decompress_ptr cinfo)
 	int ret = 1;
 
 	if (context->sops->read)
-		ret = context->sops->read(context->private, &nbytes,
+		ret = context->sops->read(context->priv_data, &nbytes,
 					  (void *) src->data);
 
 	if (ret || nbytes <= 0) {
@@ -561,7 +561,7 @@ static void shjpeg_libjpeg_term_source(j_decompress_ptr cinfo)
 	    (shjpeg_context_t *) cinfo->client_data;
 
 	if (context->sops->finalize)
-		context->sops->finalize(context->private);
+		context->sops->finalize(context->priv_data);
 }
 
 
@@ -756,7 +756,7 @@ shjpeg_decode_run(shjpeg_context_t * context,
 
 	if ((!context->mode444) && (context->libjpeg_disabled >= 0)) {
 		if (context->sops->init)
-			context->sops->init(context->private);
+			context->sops->init(context->priv_data);
 
 		ret = decode_hw(data, context, format, phys, width,
 				height, pitch);
