@@ -11,7 +11,8 @@ AM_CFLAGS = -Wall -Werror
 lib_LTLIBRARIES = libshjpeg.la
 
 libshjpeg_la_LIBADD = $(LIBS)
-libshjpeg_la_LDFLAGS = -release $(LIBSHJPEG_VERSION)
+
+libshjpeg_la_LDFLAGS = -version-info $(LIBSHJPEG_VERSION_INFO)
 
 libshjpeg_la_SOURCES = \
 	shjpeg_common.c \
