@@ -1,3 +1,4 @@
+EXTRA_DIST = jpeglibheads.c
 
 if MAKE_JPEG_WRAPPER
 if CUSTOM_JPEG_LIB

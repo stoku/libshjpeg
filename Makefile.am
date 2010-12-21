@@ -1,4 +1,3 @@
-ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = gen include src doc tests
 
 # pkg-config
