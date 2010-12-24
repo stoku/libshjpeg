@@ -33,3 +33,7 @@
   to libjpegtest.  See tests/libjpeg_test.c for an example
 * Add "libjpeg62 Application Workaround" section to libshjpeg.txt to explain
   EXIF application workaround
+
+1.3.3 and later
+===============
+Change logs will be recorded in the release_notes directory from now on.

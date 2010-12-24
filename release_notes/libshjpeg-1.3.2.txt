@@ -1,0 +1,35 @@
+libshjpeg Release 1.3.2
+=======================
+
+libshjpeg: A library for controlling the SH-Mobile JPU
+
+The source archive is available from 
+
+	https://github.com/dhobsong/libshjpeg
+
+New in this release
+-------------------
+* Properly pass non-YCbCr and YCbCr 4:4:4 encoded JPEGs to libjpeg for 
+  decoding 
+* Add workaround for decoding files with EXIF or other metadata in libjpeg62
+  to libjpegtest.  See tests/libjpeg_test.c for an example
+* Add "libjpeg62 Application Workaround" section to libshjpeg.txt to explain
+  EXIF application workaround
+
+Changes
+-------
+
+This release includes the following changes since version 1.3.1
+
+Damian Hobson-Garcia (3):
+      libjpeg_wrapper: Properly pass non-YCbCr and 4:4:4 JPEGs to libjpeg for
+		decoding
+      libjpegtest: Add workaround for decoding EXIF data in libjpeg62
+      Version 1.3.2
+
+ ChangeLog                   |    9 ++++++
+ configure.ac                |    4 +-
+ libshjpeg.txt               |   58 ++++++++++++++++++++++++++++++++++++++----
+ src/libjpeg_wrap/override.c |    6 ++--
+ tests/libjpeg_test.c        |   24 +++++++++++++++++
+ 5 files changed, 90 insertions(+), 11 deletions(-)
