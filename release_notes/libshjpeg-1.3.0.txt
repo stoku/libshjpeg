@@ -1,0 +1,88 @@
+libshjpeg Release 1.3.0
+=======================
+
+libshjpeg: A library for controlling the SH-Mobile JPU
+
+The source archive is available from 
+
+	https://github.com/dhobsong/libshjpeg
+
+New in this release
+-------------------
+This release introduces the ability to use the libjpeg (www.ijg.org) API
+with libshjpeg.  The existing libshjpeg API remains unchanged and avaiable 
+for any applications that choose to use it now and in the future. 
+
+* Add support for libjpeg interface
+* Compile with either libjpeg 62 (with patches) or 80
+
+Changes
+-------
+
+This release includes the following changes since version 1.2.0
+
+Damian Hobson-Garcia (16):
+      Add libjpeg interface
+      Correct spelling and indicate repository location
+      Add check for libjpeg include path for sample apps
+      Add more meaningful comment for when the shared libjpeg cannot be found
+      libjpegtest: Ensure that the std_mem_src and std_mem_dest is only used for libjpeg version >= 80
+      shjpeg_encode: stop outputting extraneous data at the end of large files
+      libjpeg wrapper: properly close data source and destinations when processing is complete
+      libjpeg wrapper:Properly handle file size corner cases in jpeg_src_read
+      formatting: Convert tabs to spaces, remove trailing whitespace
+      Revert "formatting: Convert tabs to spaces, remove trailing whitespace"
+      Formatting:  Update all tab spacing in all files to 8 column tabbing.
+      Update library revision to 1.3
+      Merge branch 'master' of github.com:dhobsong/libshjpeg
+      cleanup: Remove unnecessary definitions of my_stdio_src/dest
+      Add image size checks before processing using libjpeg compatibility
+      libjpeg 62 compatibility:  Added additional compatibility informatio for version 62 of libjpeg
+
+Phil Edworthy (4):
+      autotools: Remove generated files
+      Fix cross-compilation by using pkgconfig to find DirectFB.
+      Formatting: Tabs to spaces.
+      tests: Removed unused libraries
+
+ INSTALL                        |  302 --
+ Makefile.in                    |  775 ----
+ README                         |    4 +
+ aclocal.m4                     |  991 -----
+ autoscan.log                   |    6 -
+ config.h.in                    |  167 -
+ configure.ac                   |   26 +-
+ depcomp                        |  630 ---
+ gen/genapi                     |   12 +
+ gen/get_externs                |   65 +
+ include/libjpeg_wrap/hooks.h   |   48 +
+ include/shjpeg/Makefile.in     |  456 ---
+ include/shjpeg/shjpeg_types.h  |   50 +-
+ install-sh                     |  520 ---
+ libjpeg6_skipfix.patch         |   11 +
+ libshjpeg.txt                  |  144 +
+ ltmain.sh                      | 8413 ----------------------------------------
+ missing                        |  376 --
+ src/Makefile.am                |   15 +
+ src/libjpeg_wrap/hooks/hooks.c |   41 +
+ src/libjpeg_wrap/init.c        |  106 +
+ src/libjpeg_wrap/jpeg_io.c     |  225 ++
+ src/libjpeg_wrap/jpeg_io.h     |   40 +
+ src/libjpeg_wrap/libmessage.h  |   75 +
+ src/libjpeg_wrap/override.c    |  408 ++
+ src/libjpeg_wrap/override.h    |   65 +
+ src/shjpeg_common.c            |  647 ++--
+ src/shjpeg_config.c            |  232 +-
+ src/shjpeg_decode.c            | 1181 +++---
+ src/shjpeg_encode.c            |  548 ++--
+ src/shjpeg_internal.h          |  112 +-
+ src/shjpeg_jpu.c               | 1085 +++---
+ src/shjpeg_jpu.h               |   95 +-
+ src/shjpeg_regs.h              |    4 +-
+ src/shjpeg_utils.h             |   39 +-
+ src/shjpeg_veu.c               |  197 +-
+ src/shjpeg_veu.h               |   72 +-
+ tests/Makefile.am              |   12 +-
+ tests/libjpeg_test.c           |  301 ++
+ tests/shjpegshow.c             |    1 -
+ 40 files changed, 3831 insertions(+), 14666 deletions(-)
