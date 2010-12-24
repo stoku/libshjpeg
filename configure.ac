@@ -4,6 +4,23 @@
 AC_PREREQ([2.63])
 AC_INIT([libshjpeg], [1.3.2], [dhobsong@igel.co.jp])
 AC_SUBST([LIBSHJPEG_VERSION], [1.3.2])
+################################################################################
+# Set the shared versioning info, according to section 6.3 of the libtool info #
+# pages. CURRENT:REVISION:AGE must be updated immediately before each release: #
+#                                                                              #
+#   * If the library source code has changed at all since the last             #
+#     update, then increment REVISION (`C:R:A' becomes `C:r+1:A').             #
+#                                                                              #
+#   * If any interfaces have been added, removed, or changed since the         #
+#     last update, increment CURRENT, and set REVISION to 0.                   #
+#                                                                              #
+#   * If any interfaces have been added since the last public release,         #
+#     then increment AGE.                                                      #
+#                                                                              #
+#   * If any interfaces have been removed since the last public release,       #
+#     then set AGE to 0.                                                       #
+#                                                                              #
+################################################################################
 AC_SUBST([LIBSHJPEG_VERSION_INFO], [4:2:3])
 
 AM_INIT_AUTOMAKE([-Wall -Werror])
