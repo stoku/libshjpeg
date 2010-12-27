@@ -176,14 +176,119 @@ $ libjpegtest -h
 
 4.1 Supported Features
 ======================
-The libshjpeg library can decode to and encode from buffers with the following standard libjpeg colour coding
 
-     * JCS_RGB24 
-     * JCS_YCrCb
+API
+---
 
-Additionally the following non-standard libjpeg formats are supported
-     * JCS_RGB565 (on Android)
-     * JCS_RGBA888 (on Android)
+The functions listed as being "ignored" will not have any effect on the encoded
+or decoded output. "supported" functions can be used to control the coding
+process and retrieve information about the source/destination jpeg. Any API not
+listed in the table is not supported and should not be used with libshjpeg.
+
+------------------------+---------------+------------+---------------------
+API function            |   supported   |   ignored  |     comment
+------------------------+---------------+------------+---------------------
+jpeg_create_decompress 	|       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_create_compress    |       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_std_error          |       ○  	|	     |
+------------------------+---------------+------------+---------------------
+jpeg_std_dest           |       ○  	|            |
+------------------------+---------------+------------+---------------------
+jpeg_std_src            |       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_mem_dest           |       ○       |            | API only present in
+                        |               |            | libjpeg versions >=
+                        |               |            | libjpeg-8b
+------------------------+---------------+------------+---------------------
+jpeg_mem_src            |       ○       |            | API only present in
+                        |               |            | libjpeg versions >=
+                        |               |            | libjpeg-8b
+------------------------+---------------+------------+---------------------
+jpeg_set_defaults       |       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_set_colorspace     |               |     ○      | Always encode YCbCr 4:2:0
+------------------------+---------------+------------+---------------------
+jpeg_default_colorspace |               |     ○      | Always encode YCbCr 4:2:0
+------------------------+---------------+------------+---------------------
+jpeg_set_quality        |               |     ○      | Only default image
+                        |               |            | quality supported
+------------------------+---------------+------------+---------------------
+jpeg_set_linear_quality |               |     ○      | Only default image
+                        |               |            | quality supported
+------------------------+---------------+------------+---------------------
+jpeg_default_qtables    |               |     ○      | Only default image
+                        |               |            | quality supported
+                        |               |            | (version >= libjpeg-8b)
+------------------------+---------------+------------+---------------------
+jpeg_add_quant_table    |               |     ○      | Only default image
+                        |               |            | quality supported
+------------------------+---------------+------------+---------------------
+jpeg_quality_setting    |               |     ○      | Only default image
+                        |               |            | quality supported
+------------------------+---------------+------------+---------------------
+jpeg_simple_progression |               |     ○      | Progressive jpeg encoding
+                        |               |            | not supported
+------------------------+---------------+------------+---------------------
+jpeg_suppress_tables    |               |     ○      | Only default quantization
+                        |               |            | supported
+------------------------+---------------+------------+---------------------
+jpeg_alloc_quant_table  |               |     ○      | Only default quantization
+                        |               |            | supported
+------------------------+---------------+------------+---------------------
+jpeg_alloc_huff_table   |               |     ○      | Only default quantization
+                        |               |            | supported
+------------------------+---------------+------------+---------------------
+jpeg_start_compress     |       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_write_scanlines    |       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_finish_compress    |       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_calc_jpeg_dimension|　             |     ○      | JPEG scaling is not
+                        |               |            | supported so may return
+                        |               |            | invalid values 
+                        |               |            | (version >= libjpeg-8b)
+------------------------+---------------+------------+---------------------
+jpeg_core_output_dimensions　           |     ○      | JPEG scaling is not
+                        |               |            | supported so may return
+                        |               |            | invalid values
+                        |               |            | (version >= libjpeg-8b)
+------------------------+---------------+------------+---------------------
+jpeg_calc_output_dimensions     ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_start_decompress   |       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_read_scanlines     |       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_finish_decompress  |       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_abort_decompress   |       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_abort_compress     |       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_abort              |       ○       |            |
+------------------------+---------------+------------+---------------------
+jpeg_destroy            |       ○       |            |
+------------------------+---------------+------------+---------------------
+
+No other API functions are supported.
+
+Colorspace
+----------
+
+The following decode/encode colorspaces are supported by libshjpeg
+
+-------------+---------------------+---------------------------------------
+image format |    H/W Accelerated  |    notes 	
+-------------+---------------------+---------------------------------------
+RGB24        |        ○            |    handled by JPU
+YUYV 	     |        ○ 	   |    handled by JPU + S/W
+grayscale    |        × 	   |    pass-through
+YCCK         |        ×            |    pass-through
+CMYK         |        ×            |    pass-through 
+-------------+---------------------+---------------------------------------
 
 As well as the following when using the direct hardware interface (not
 via libjpeg)
