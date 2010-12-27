@@ -22,6 +22,7 @@ libshjpeg_la_SOURCES = \
 	shjpeg_decode.c \
 	shjpeg_encode.c \
 	shjpeg_softhelper.c \
+	shjpeg_softhelper.h \
 	shjpeg_internal.h \
 	shjpeg_utils.h \
 	shjpeg_regs.h \
@@ -32,7 +33,10 @@ if MAKE_JPEG_WRAPPER
 libshjpeg_la_SOURCES += \
 	libjpeg_wrap/init.c \
 	libjpeg_wrap/override.c \
+	libjpeg_wrap/override.h \
 	libjpeg_wrap/jpeg_io.c \
+	libjpeg_wrap/jpeg_io.h \
+	libjpeg_wrap/libmessage.h \
 	libjpeg_wrap/hooks/hooks.c \
 	libjpeg_wrap/libjpeg_api/jpegapi.c
 endif
