@@ -1,4 +1,6 @@
-EXTRA_DIST = jpeglibheads.c
+EXTRA_DIST = jpeglibheads.c \
+             genapi \
+             get_externs
 
 if MAKE_JPEG_WRAPPER
 if CUSTOM_JPEG_LIB

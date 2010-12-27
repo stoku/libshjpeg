@@ -93,5 +93,6 @@ AC_CONFIG_FILES([Makefile
 		 tests/Makefile
 		 include/Makefile
 		 include/shjpeg/Makefile
+		 include/libjpeg_wrap/Makefile
 		 shjpeg.pc])
 AC_OUTPUT

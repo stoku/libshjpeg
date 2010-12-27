@@ -1,1 +1,1 @@
-SUBDIRS=shjpeg
+SUBDIRS=shjpeg libjpeg_wrap
