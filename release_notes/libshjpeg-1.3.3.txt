@@ -1,0 +1,65 @@
+libshjpeg Release 1.3.3
+=======================
+
+libshjpeg: A library for controlling the SH-Mobile JPU
+
+The source archive is available from 
+
+	https://github.com/dhobsong/libshjpeg
+
+New in this release
+-------------------
+No updates to the functionality of the library in this release.  The changes
+primarily consist of housekeeping updates for revision and additions/updates
+to documentation.  Some changes have also been made to allow the library to
+be compiled and used with C++.
+
+ * Remove the usage of the C++ reserved keyword "private"
+ * Miscellaneous housekeeping for version numbering and releases
+ * Abandon ChangeLog in favour of the release_notes directory
+ * Documentation updates
+
+Changes
+-------
+Damian Hobson-Garcia (7):
+      Merge branch 'dist' of https://github.com/pedwo/libshjpeg into pedwo-dist
+      Add release_notes directory and notes for previous releases
+      Add libtool versioning comment to configure.ac
+      Documentation: Add man page for libjpegtest
+      Documentation: Add section numbers to libshjpeg.txt
+      Documentation: Update Supported Features section of libshjpeg.txt
+      Add more files to include with make dist
+
+Nobuhiro Iwamatsu (2):
+      libshjpeg: Add support version-info
+      libshjpeg: Fix build with C++
+
+Phil Edworthy (2):
+      Remove m4 dir
+      Add missing file to dist
+
+ ChangeLog                         |    4 +
+ Makefile.am                       |    6 +-
+ configure.ac                      |   19 +-
+ doc/Makefile.am                   |    2 +-
+ doc/libjpegtest.1                 |   17 +
+ gen/Makefile.am                   |    1 +
+ include/shjpeg/shjpeg.h           |    8 +
+ include/shjpeg/shjpeg_types.h     |   10 +-
+ libshjpeg.txt                     |  201 +-
+ m4/libtool.m4                     | 7379 -------------------------------------
+ m4/ltoptions.m4                   |  368 --
+ m4/ltsugar.m4                     |  123 -
+ m4/ltversion.m4                   |   23 -
+ m4/lt~obsolete.m4                 |   92 -
+ release_notes/libshjpeg-1.3.0.txt |   88 +
+ release_notes/libshjpeg-1.3.1.txt |   73 +
+ release_notes/libshjpeg-1.3.2.txt |   35 +
+ src/Makefile.am                   |    3 +-
+ src/libjpeg_wrap/override.c       |    8 +-
+ src/shjpeg_decode.c               |   14 +-
+ src/shjpeg_encode.c               |    4 +-
+ tests/shjpegshow.c                |    2 +-
+ tests/shjpegtest.c                |    2 +-
+ tests/v2mjpeg.c                   |    2 +-
+ 24 files changed, 434 insertions(+), 8050 deletions(-)
