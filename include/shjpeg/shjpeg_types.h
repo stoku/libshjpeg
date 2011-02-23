@@ -26,7 +26,9 @@
 #ifdef HAVE_STDLIB_H   
 #  undef HAVE_STDLIB_H //conflicts when using libjpeg version 6x
 #endif
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 /**
  * \file shjpeg_types.h
  *
