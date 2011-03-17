@@ -1,0 +1,29 @@
+libshjpeg Release 1.3.5
+=======================
+
+libshjpeg: A library for controlling the SH-Mobile JPU
+
+The source archive is available from
+
+	https://github.com/dhobsong/libshjpeg
+
+New in this release
+-------------------
+Add a 32bit RGB test mode to shjpegtest.
+Bug fixes:
+ * Correct byte swapping when encoding from 32bit RGB image source
+ * only include config.h when building in the library path
+
+Changes
+-------
+Damian Hobson-Garcia (4):
+      shjpeg_types.h: Only include config.h when HAVE_CONFIG_H is defined
+      set proper bit swapping when encoded 32-bit RGBX buffers
+      shjpegtest: Add RGB32 test mode
+      documentation: Add release note for 1.3.4 which was omitted at that time
+
+ include/shjpeg/shjpeg_types.h     |    2 ++
+ release_notes/libshjpeg-1.3.4.txt |   26 ++++++++++++++++++++++++++
+ src/shjpeg_encode.c               |    2 +-
+ tests/shjpegtest.c                |   10 ++++++++++
+ 4 files changed, 39 insertions(+), 1 deletions(-)
