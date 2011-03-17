@@ -83,7 +83,7 @@ encode_hw(shjpeg_internal_t * data,
 		break;
 
 	case SHJPEG_PF_RGB32:
-		vswpin = 0x44;
+		vswpin = 0x74;
 		vtrcr |= (0 << 8) | 3;
 		break;
 
