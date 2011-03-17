@@ -137,6 +137,12 @@ void write_bmp(const char *filename, int bpp,
 	bmp_header.compression = 0;
 	buffer = malloc(stride);
 	break;
+    case 32:
+	bmp_header.red_mask   = 0x00ff0000;
+	bmp_header.green_mask = 0x0000ff00;
+	bmp_header.blue_mask  = 0x000000ff;
+	bmp_header.compression = 0;
+	break;
     }    
 
     /* Write BMP header */
@@ -150,6 +156,7 @@ void write_bmp(const char *filename, int bpp,
     for (h = 0; h < height; h++) {
 	switch(bpp) {
 	case 16:
+	case 32:
 	    buffer = ptr;
 	    break;
 	case 24:
@@ -434,6 +441,9 @@ main(int argc, char *argv[])
 	    bpp = 24;
 	
 	switch(bpp) {
+	case 32:
+	    format = SHJPEG_PF_RGB32;
+	    break;
 	case 24:
 	    format = SHJPEG_PF_RGB24;
 	    break;
