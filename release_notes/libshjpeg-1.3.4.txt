@@ -1,0 +1,26 @@
+libshjpeg Release 1.3.4
+=======================
+
+libshjpeg: A library for controlling the SH-Mobile JPU
+
+The source archive is available from 
+
+	https://github.com/dhobsong/libshjpeg
+
+New in this release
+-------------------
+make dist should now function properly, yielding a tar ball that actually
+compiles.
+
+Changes
+-------
+Damian Hobson-Garcia (2):
+      release: Add all files necessary for make dist in the appropriate places
+      Version 1.3.4
+
+ configure.ac                     |    7 ++++---
+ gen/Makefile.am                  |    4 +++-
+ include/Makefile.am              |    2 +-
+ include/libjpeg_wrap/Makefile.am |    3 +++
+ src/Makefile.am                  |    4 ++++
+ 5 files changed, 15 insertions(+), 5 deletions(-)
