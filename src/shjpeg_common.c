@@ -234,7 +234,7 @@ uio_clear_irq(shjpeg_context_t * context, int fd, const char *name)
 {
 	int n = 1, rc = 0;
 
-	if (lockf(fd, F_LOCK, 0) < 0) {
+	if (flock(fd, LOCK_EX) < 0) {
 		D_PERROR("libshjpeg: Couldn't lock %s UIO.", name);
 		return -1;
 	} else {
@@ -246,7 +246,7 @@ uio_clear_irq(shjpeg_context_t * context, int fd, const char *name)
 		}
 
 	      quit:
-		if (lockf(fd, F_ULOCK, 0) < 0) {
+		if (flock(fd, LOCK_UN) < 0) {
 			D_PERROR("libshjpeg: Couldn't unlock %s UIO.", name);
 			return rc;
 		}
