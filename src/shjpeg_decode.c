@@ -108,8 +108,8 @@ decode_hw(shjpeg_internal_t * data,
 
 	D_DEBUG_AT(SH7722_JPEG, "		 -> locking JPU...");
 
-	/* Locking JPU using lockf(3) */
-	if (lockf(data->jpu_uio_fd, F_LOCK, 0) < 0) {
+	/* Locking JPU using flock */
+	if (flock(data->jpu_uio_fd, LOCK_EX) < 0) {
 		D_PERROR("libshjpeg: Could not lock JPEG engine!");
 		return -1;
 	}
@@ -128,7 +128,7 @@ decode_hw(shjpeg_internal_t * data,
 	if (ret) {
 		D_DERROR(ret,
 			 "libshjpeg: Could not fill first reload buffer!");
-		if (lockf(data->jpu_uio_fd, F_ULOCK, 0) < 0) {
+		if (flock(data->jpu_uio_fd, LOCK_UN) < 0) {
 			D_PERROR("libshjpeg: unlock UIO failed.");
 		}
 		return -1;
@@ -299,8 +299,8 @@ decode_hw(shjpeg_internal_t * data,
 
 	free_frame_buffer_virtual(&mdata);
 
-	/* Unlocking JPU using lockf(3) */
-	if (lockf(data->jpu_uio_fd, F_ULOCK, 0) < 0) {
+	/* Unlocking JPU using flock */
+	if (flock(data->jpu_uio_fd, LOCK_UN) < 0) {
 		D_PERROR("libshjpeg: Could not unlock JPEG engine!");
 		ret = -1;
 	}
