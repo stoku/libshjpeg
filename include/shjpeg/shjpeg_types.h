@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <stdio.h>	/* required by jpeglib.h */
 #include <jpeglib.h>
 #ifdef HAVE_STDLIB_H   
 #  undef HAVE_STDLIB_H //conflicts when using libjpeg version 6x
