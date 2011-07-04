@@ -34,6 +34,12 @@
 * Add "libjpeg62 Application Workaround" section to libshjpeg.txt to explain
   EXIF application workaround
 
+=======
+1.3.2_r1
+=======
+* Dual license along with MIT License. Users of this library may now freely
+  choose whether to receive a license under either the LGPL or MIT licenses.
+
 1.3.3 and later
 ===============
 Change logs will be recorded in the release_notes directory from now on.
