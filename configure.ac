@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.63])
-AC_INIT([libshjpeg], [1.3.5], [dhobsong@igel.co.jp])
-AC_SUBST([LIBSHJPEG_VERSION], [1.3.5])
+AC_INIT([libshjpeg], [1.3.6], [dhobsong@igel.co.jp])
+AC_SUBST([LIBSHJPEG_VERSION], [1.3.6])
 ################################################################################
 # Set the shared versioning info, according to section 6.3 of the libtool info #
 # pages. CURRENT:REVISION:AGE must be updated immediately before each release: #
@@ -21,7 +21,7 @@ AC_SUBST([LIBSHJPEG_VERSION], [1.3.5])
 #     then set AGE to 0.                                                       #
 #                                                                              #
 ################################################################################
-AC_SUBST([LIBSHJPEG_VERSION_INFO], [4:5:3])
+AC_SUBST([LIBSHJPEG_VERSION_INFO], [4:6:3])
 
 AM_INIT_AUTOMAKE([-Wall -Werror])
 AC_CONFIG_SRCDIR([src/shjpeg_decode.c])
