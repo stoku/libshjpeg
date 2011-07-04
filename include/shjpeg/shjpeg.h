@@ -5,19 +5,15 @@
  * Copyright (C) 2008-2009 Renesas Technology Corp.
  * Copyright (C) 2008 Denis Oliver Kropp
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This library is dual licensed.
+ * You are free to use this library under either the MIT or
+ * the GNU LGPL version 2 license.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * For more information please refer to the licensing files
+ * in the root directory of this library package.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA  02110-1301 USA
+ * GNU LGPL license: COPYING_LGPL
+ * MIT license: COPYING_MIT
  */
 
 #ifndef __shjpeg_h__
@@ -34,21 +30,15 @@
 /**
  * \mainpage
  *
- * This library supports JPEG encoding and decoding via SH-Mobile
- * JPU. JPU is a hardware JPEG codecs. The library make use of JPU via
- * UIO. To use this library, the UIO for JPU shall be enabled.
+ * This library is dual licensed.
+ * You are free to use this library under either the MIT or
+ * the GNU LGPL version 2 license.
  *
- * The library tries to decode JPEG image via JPU where
- * possible. However, when it finds that is not possible due to the
- * hardware specification, it automatically falss back to software
- * decoding via libjpeg.
+ * For more information please refer to the licensing files
+ * in the root directory of this library package.
  *
- * The encoding always success, thus there is no software fallback.
- *
- * This version of library supports only NV12/NV16 pixel format. When
- * YUV420 profile is passed to the library, it automatically decode in
- * NV12 pixel format. When YUV422 profile or YUV444 profile is passed,
- * it automatically decode in NV16 pixel format.
+ * GNU LGPL license: COPYING_LGPL
+ * MIT license: COPYING_MIT
  *
  * Encoding can only be from/to NV12/NV16 pixel format.
  */

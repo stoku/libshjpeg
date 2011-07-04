@@ -5,19 +5,15 @@
  * Copyright (C) 2008,2009 Renesas Technology Corp.
  * Copyright (C) 2008 Denis Oliver Kropp
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This library is dual licensed.
+ * You are free to use this library under either the MIT or
+ * the GNU LGPL version 2 license.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * For more information please refer to the licensing files
+ * in the root directory of this library package.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA  02110-1301 USA
+ * GNU LGPL license: COPYING_LGPL
+ * MIT license: COPYING_MIT
  */
 #include <stdio.h>
 #include <stdlib.h>
