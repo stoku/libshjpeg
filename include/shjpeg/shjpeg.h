@@ -79,8 +79,8 @@ void shjpeg_shutdown(shjpeg_context_t *context);
  * Kernel allocated contiguous memory that could be used to place
  * uncompressed image for decoding and encoding is returned. This
  * physcal contiguous memory will be default memory used by
- * encoder/decoder when 0L is passed as the physcial memory address to
- * shjpeg_decode() or shjpeg_encode(). As the memory is made
+ * encoder/decoder when SHJPEG_USE_DEFAULT_BUFFER is passed as the physcial
+ * memory address to shjpeg_decode() or shjpeg_encode(). As the memory is made
  * accessible from user space only after calling shjpeg_init(), you cannot
  * call this function before calling shjpeg_init().
  *
@@ -136,8 +136,8 @@ int shjpeg_decode_init(shjpeg_context_t *context);
  * \param format [in] desired pixelformat of the decoded image.  
  *
  * \param phys [in] physical memory address for decoded image. If the value
- *       is set to 0L, then memory allocated by the kernel will be
- *       automatically used. The kernel allocated memory can be
+ *       is set to SHJPEG_USE_DEFAULT_BUFFER, then memory allocated by the
+ *       kernel will be automatically used. The kernel allocated memory can be
  *       obtained using shjpeg_get_frame_buffer().
  *
  * \param width [in] width of the destination frame buffer.
@@ -186,8 +186,8 @@ void shjpeg_decode_shutdown(shjpeg_context_t *context);
  *	  supported.
  *
  * \param phys physical memory address for input image. If the value
- *       is set to 0L, then memory allocated by the kernel will be
- *       automatically used. The kernel allocated memory can be
+ *       is set to SHJPEG_USE_DEFAULT_BUFFER, then memory allocated by the
+ *       kernel will be automatically used. The kernel allocated memory can be
  *       obtained using shjpeg_get_frame_buffer().
  *
  * \param width width of the input image. 
