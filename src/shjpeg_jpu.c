@@ -259,6 +259,35 @@ shjpeg_process_veu(shjpeg_context_t * context, shjpeg_internal_t * data)
 	return 0;
 }
 
+/* Colorspace conversion in software */
+static void
+shjpeg_sw_convert(shjpeg_context_t * context, shjpeg_internal_t * data, shjpeg_jpu_t * jpeg)
+{
+	void *ydata, *cdata;
+	int lines;
+
+	soft_get_src_jpu(data, &ydata, &cdata);
+	lines = context->height - jpeg->soft_line;
+	lines = lines > SHJPEG_JPU_LINEBUFFER_HEIGHT ? SHJPEG_JPU_LINEBUFFER_HEIGHT : lines;
+
+	if (lines > 0) {
+		D_INFO("libshjpeg: soft: process LB%d", data->veu_linebuf);
+		if (data->jpeg_encode) {
+			soft_fromYCbCr(data, context, ydata,
+				cdata, data->user_jpeg_virt + jpeg->soft_offset, lines);
+		} else {
+			soft_toYCbCr(data, context, ydata,
+				cdata, data->user_jpeg_virt + jpeg->soft_offset, lines);
+		}
+		jpeg->soft_offset += context->pitch * lines;
+		jpeg->soft_line += lines;
+		data->veu_linebuf = (data->veu_linebuf + 1) % 2;
+	} else if (data->jpeg_encode) {
+		data->veu_linebuf = (data->veu_linebuf + 1) % 2;
+		D_INFO("libshjpeg: soft: clear LB%d", data->veu_linebuf);
+	}
+}
+
 /*
  * Main JPU control
  */
@@ -354,6 +383,7 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 					data->veu_linebuf,
 					jpeg->soft_line,
 					jpeg->soft_line + lines);
+
 				soft_get_src_jpu(data, &ydata, &cdata);
 				lines = context->height - jpeg->soft_line;
 				lines = lines > SHJPEG_JPU_LINEBUFFER_HEIGHT ?
@@ -459,36 +489,7 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 		else if (softconvert &&
 				(data->jpeg_linebufs &
 				(1 << data->veu_linebuf))) {
-			void *ydata, *cdata;
-			int lines;
-			soft_get_src_jpu(data, &ydata, &cdata);
-			lines = context->height - jpeg->soft_line;
-			lines = lines > SHJPEG_JPU_LINEBUFFER_HEIGHT ?
-				SHJPEG_JPU_LINEBUFFER_HEIGHT : lines;
-			if (lines > 0) {
-				data->jpeg_linebufs &=
-						~(1 << data->veu_linebuf);
-				D_INFO("libshjpeg: soft: process LB%d",
-					data->veu_linebuf);
-				if (data->jpeg_encode) {
-					soft_fromYCbCr(data, context, ydata,
-						cdata, data->user_jpeg_virt +
-						jpeg->soft_offset, lines);
-				} else {
-					soft_toYCbCr(data, context, ydata,
-						cdata, data->user_jpeg_virt +
-						jpeg->soft_offset, lines);
-				}
-				jpeg->soft_offset += context->pitch * lines;
-				jpeg->soft_line += lines;
-				data->veu_linebuf = (data->veu_linebuf + 1) % 2;
-			} else if (data->jpeg_encode) {
-				data->jpeg_linebufs &=
-						~(1 << data->veu_linebuf);
-				data->veu_linebuf = (data->veu_linebuf + 1) % 2;
-				D_INFO("libshjpeg: soft: clear LB%d",
-					data->veu_linebuf);
-			}
+			shjpeg_sw_convert(context, data, jpeg);
 		}
 
 		/* are we done? */
