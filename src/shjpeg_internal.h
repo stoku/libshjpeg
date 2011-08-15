@@ -79,7 +79,6 @@ typedef struct {
 	int jpeg_end;
 	uint32_t jpeg_linebufs;
 	int jpeg_linebuf;
-	int jpeg_line;
 
 	int jpu_running;
 	int jpu_lb_first_irq;

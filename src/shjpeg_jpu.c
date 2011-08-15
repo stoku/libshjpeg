@@ -16,6 +16,25 @@
  * MIT license: COPYING_MIT
  */
 
+/*
+ Here is a very rough outline of the processing:
+
+ The callee provides a bitmask of input buffers to be processed.
+ The JPU hardware processes the input buffers on a 'line buffer' basis and
+ fires off interrupts when each line buffer processing is complete. Each
+ line buffer is fixed at 16 pixels. For jpeg decode, the line buffer IRQ
+ happens when the JPU has output a line buffer; for encode it happens when
+ the JPU has finished with a line buffer of input.
+
+ When all of the data in the input buffer is consumed, the JPU will fire a
+ 'reload complete' interrupt. In order to get the JPU to start again, you send
+ a 'read restart' command. The 'reload complete' interrupt can occur during
+ or after line buffer processing.
+
+ The VEU can scale & color convert pixel data and this is setup to work on
+ line buffers as they are needed or output from the JPU.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -56,6 +75,7 @@ void process_jpu_ints(int ints, shjpeg_context_t *context,
 
 	/* Header */
 	if (ints & JPU_JINTS_INS3_HEADER) {
+		/* Note: This IRQ is never enabled */
 		D_INFO("libshjpeg: header=%dx%d",
 			shjpeg_jpu_getreg32(data, JPU_JIFDDHSZ),
 			shjpeg_jpu_getreg32(data, JPU_JIFDDVSZ));
@@ -68,7 +88,7 @@ void process_jpu_ints(int ints, shjpeg_context_t *context,
 		*done = 1;
 	}
 
-	/* Done */
+	/* Done - but image transfer not complete */
 	if (ints & JPU_JINTS_INS6_DONE) {
 		data->jpeg_end = 1;
 		data->jpeg_linebufs = 0;
@@ -83,7 +103,7 @@ void process_jpu_ints(int ints, shjpeg_context_t *context,
 		*done = 1;
 	}
 
-	/* line bufs */
+	/* Line buffer processing complete */
 	if (ints & (JPU_JINTS_INS11_LINEBUF0 | JPU_JINTS_INS12_LINEBUF1)) {
 		D_INFO ("libshjpeg: jpu: done w/ LB%d", data->jpeg_linebuf);
 
@@ -94,13 +114,13 @@ void process_jpu_ints(int ints, shjpeg_context_t *context,
 		/* * check if the next buffer is not
 		 * ready yet. if so, start JPU.  */
 		data->jpu_running = 0;
-		if (!(data-> jpeg_linebufs & (1 << data-> jpeg_linebuf))) {
+		if (!(data->jpeg_linebufs & (1 << data->jpeg_linebuf))) {
 			if (!data->jpeg_end) {
 				D_INFO ("libshjpeg: jpu: process LB%d",
-				     data-> jpeg_linebuf);
+				     data->jpeg_linebuf);
 
-			if (data-> jpu_lb_first_irq)
-				data-> jpu_lb_first_irq = 0;
+			if (data->jpu_lb_first_irq)
+				data->jpu_lb_first_irq = 0;
 			else
 				shjpeg_jpu_setreg32 (data, JPU_JCCMD,
 				     JPU_JCCMD_LCMD2 | JPU_JCCMD_LCMD1);
@@ -122,7 +142,7 @@ void process_jpu_ints(int ints, shjpeg_context_t *context,
 		*done = 1;
 	}
 
-	/* Reload */
+	/* Reload - means input buffer has been used, need more data */
 	if (ints & JPU_JINTS_INS14_RELOAD) {
 		D_INFO ("libshjpeg: reload complete (%d/%d)",
 			data->jpeg_buffer, data->jpeg_reading);
@@ -165,11 +185,11 @@ shjpeg_process_jpu(shjpeg_context_t * context, shjpeg_internal_t * data, int *do
 
 	D_INFO("libshjpeg: JPU interrupt 0x%08x(%08x) "
 		"(veu_linebuf: %d, jpeg_linebuf: %d, "
-		"jpeg_linebufs: %d, jpeg_line: %d, "
+		"jpeg_linebufs: %d, "
 		"jpeg_buffers: %d)",
 	       ints, shjpeg_jpu_getreg32(data, JPU_JINTS),
 	       data->veu_linebuf, data->jpeg_linebuf,
-	       data->jpeg_linebufs, data->jpeg_line,
+	       data->jpeg_linebufs,
 	       data->jpeg_buffers);
 
 	if (ints) {
@@ -232,7 +252,7 @@ shjpeg_process_veu(shjpeg_context_t * context, shjpeg_internal_t * data)
 
 	/* if JPU is not running - start */
 	if (!data->jpeg_end && !data->jpu_running &&
-	    (!(data-> jpeg_linebufs & (1 << data-> jpeg_linebuf)))) {
+	    (!(data->jpeg_linebufs & (1 << data->jpeg_linebuf)))) {
 		D_INFO("libshjpeg: jpu: process LB%d", data->jpeg_linebuf);
 
 		if (data->jpu_lb_first_irq)
@@ -286,14 +306,13 @@ shjpeg_sw_convert(shjpeg_context_t * context, shjpeg_internal_t * data, shjpeg_j
 
 		/* if JPU is not running - start */
 		if (!data->jpeg_end && !data->jpu_running &&
-			(!(data-> jpeg_linebufs & (1 << data-> jpeg_linebuf)))) {
+			(!(data->jpeg_linebufs & (1 << data->jpeg_linebuf)))) {
 			D_INFO("libshjpeg: jpu: process LB%d", data->jpeg_linebuf);
 
 			if (data->jpu_lb_first_irq)
 				data->jpu_lb_first_irq = 0;
 			else
-				shjpeg_jpu_setreg32(data, JPU_JCCMD,
-					JPU_JCCMD_LCMD1 | JPU_JCCMD_LCMD2);
+				shjpeg_jpu_setreg32(data, JPU_JCCMD, JPU_JCCMD_LCMD1 | JPU_JCCMD_LCMD2);
 			data->jpu_running = 1;
 		}
 
@@ -334,7 +353,6 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 		D_INFO("START (buffers: %d, flags: 0x%x)", jpeg->buffers,
 		       jpeg->flags);
 
-		data->jpeg_line = 0;
 		data->jpeg_end = 0;
 		data->jpeg_error = 0;
 		data->jpeg_encode = encode;
@@ -355,7 +373,6 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 		jpeg->state = SHJPEG_JPU_RUN;
 		jpeg->error = 0;
 
-		// JPU_JCCMD = JCCMD_START;
 		shjpeg_jpu_setreg32(data, JPU_JCCMD, JPU_JCCMD_START);
 		break;
 
@@ -377,13 +394,13 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 	}
 
 	/*
-	 * bootstrap
+	 * Prologue
 	 */
+	D_INFO("\nlibshjpeg: Prologue");
 	if (data->jpeg_encode) {
 		if (convert) {
 			if (!data->veu_running &&
-			    (data->
-			     jpeg_linebufs & (1 << data->veu_linebuf))) {
+			    (data->jpeg_linebufs & (1 << data->veu_linebuf))) {
 				shjpeg_start_veu(context, data, jpeg);
 			}
 
@@ -397,21 +414,20 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 			D_INFO(" '-> write start (buffers: %d)",
 			       data->jpeg_buffers);
 			data->jpeg_writing = 1;
-
-			// JPU_JCCMD = JCCMD_WRITE_RESTART;
 			shjpeg_jpu_setreg32(data, JPU_JCCMD,
 					    JPU_JCCMD_WRITE_RESTART);
 	}
 
 	} else if (data->jpeg_buffers && !data->jpeg_reading) {
-		D_INFO(" '-> read start (buffers: %d)",
-		       data->jpeg_buffers);
+		D_INFO(" '-> read start (buffers: %d)", data->jpeg_buffers);
 		data->jpeg_reading = 1;
-
-		// JPU_JCCMD = JCCMD_READ_RESTART;
-		shjpeg_jpu_setreg32(data, JPU_JCCMD,
-				    JPU_JCCMD_READ_RESTART);
+		shjpeg_jpu_setreg32(data, JPU_JCCMD, JPU_JCCMD_READ_RESTART);
 	}
+
+	/*
+	 * Main loop
+	 */
+	D_INFO("\nlibshjpeg: Main loop");
 	// Read from UIO dev here to wait for IRQ....
 	done = 0;
 	for (;;) {
@@ -458,13 +474,12 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 		 */
 		if (convert) {
 			if (!data->veu_running &&
-			    (data-> jpeg_linebufs & (1 << data->veu_linebuf))) {
+			    (data->jpeg_linebufs & (1 << data->veu_linebuf))) {
 				shjpeg_start_veu(context, data, jpeg);
 			}
 		}
 		else if (softconvert &&
-				(data->jpeg_linebufs &
-				(1 << data->veu_linebuf))) {
+			(data->jpeg_linebufs & (1 << data->veu_linebuf))) {
 			shjpeg_sw_convert(context, data, jpeg);
 		}
 
@@ -481,7 +496,6 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 		/* Return error. */
 		jpeg->state = SHJPEG_JPU_END;
 		jpeg->error = data->jpeg_error;
-
 		D_INFO("libshjpeg: '-> ERROR (0x%x)", jpeg->error);
 	} else {
 		/* Return buffers to reload or to empty. */
@@ -494,11 +508,9 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 			jpeg->state = SHJPEG_JPU_END;
 			jpeg->buffers |= 1 << data->jpeg_buffer;
 		} else if (encode) {
-			D_INFO("libshjpeg: '-> LOADED (%d)",
-			       jpeg->buffers);
+			D_INFO("libshjpeg: '-> LOADED (%d)", jpeg->buffers);
 		} else {
-			D_INFO("libshjpeg: '-> RELOAD (%d)",
-			       jpeg->buffers);
+			D_INFO("libshjpeg: '-> RELOAD (%d)", jpeg->buffers);
 		}
 	}
 
