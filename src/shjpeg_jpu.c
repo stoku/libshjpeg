@@ -186,6 +186,26 @@ shjpeg_process_jpu(shjpeg_context_t * context, shjpeg_internal_t * data, int *do
 	return 0;
 }
 
+static void
+shjpeg_start_veu(shjpeg_context_t * context, shjpeg_internal_t * data, shjpeg_jpu_t * jpeg)
+{
+	D_INFO("libshjpeg: veu: start LB%d", data->veu_linebuf);
+
+	if (data->jpeg_encode) {
+		shjpeg_veu_set_src(data, jpeg->sa_y, jpeg->sa_c);
+		shjpeg_veu_set_dst_jpu(data);
+		shjpeg_veu_start(data, 0);
+
+		/* Update the source addresses for the next call */
+		jpeg->sa_y += jpeg->sa_inc;
+		jpeg->sa_c += jpeg->sa_inc;
+	} else {
+		/* Set the VEU src addresses based on the value of data->veu_linebuf */
+		shjpeg_veu_set_src_jpu(data);
+		shjpeg_veu_start(data, 1);
+	}
+}
+
 static int
 shjpeg_process_veu(shjpeg_context_t * context, shjpeg_internal_t * data)
 {
@@ -318,10 +338,7 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 			if (!data->veu_running &&
 			    (data->
 			     jpeg_linebufs & (1 << data->veu_linebuf))) {
-				D_INFO("veu: start veu on %d",
-				       data->veu_linebuf);
-				shjpeg_veu_set_dst_jpu(data);
-				shjpeg_veu_start(data, 0);
+				shjpeg_start_veu(context, data, jpeg);
 			}
 
 		} else if (softconvert && !data->jpeg_end &&
@@ -436,24 +453,7 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 		if (convert) {
 			if (!data->veu_running &&
 			    (data-> jpeg_linebufs & (1 << data->veu_linebuf))) {
-				D_INFO("libshjpeg: veu: process LB%d",
-				       data->veu_linebuf);
-				if (data->jpeg_encode) {
-					jpeg->sa_y += jpeg->sa_inc;
-					jpeg->sa_c += jpeg->sa_inc;
-
-					shjpeg_veu_set_src(data,
-							   jpeg->sa_y,
-							   jpeg->sa_c);
-					shjpeg_veu_set_dst_jpu(data);
-					shjpeg_veu_start(data, 0);
-				} else {
-					shjpeg_veu_set_src_jpu(data);
-					shjpeg_veu_start(data, 1);
-				}
-			} else {
-				D_INFO("libshjpeg: veu: wait for LB%d",
-				       data->veu_linebuf);
+				shjpeg_start_veu(context, data, jpeg);
 			}
 		}
 		else if (softconvert &&
