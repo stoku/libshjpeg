@@ -138,15 +138,115 @@ void process_jpu_ints(int ints, shjpeg_context_t *context,
 		*done = 1;
 	}
 }
+
+static int
+shjpeg_process_jpu(shjpeg_context_t * context, shjpeg_internal_t * data, int *done)
+{
+	int ints, val;
+
+	/* read number of interrupts */
+	if (read(data->jpu_uio_fd, &val, sizeof(val)) != sizeof(val)) {
+		D_ERROR("libshjpeg: no IRQ - read() failed");
+		errno = EIO;
+		return -1;
+	}
+
+	/* sanity check */
+	D_INFO("libshjpeg: IRQ counts = %d", val);
+
+	/* get JPU IRQ stats */
+	ints = shjpeg_jpu_getreg32(data, JPU_JINTS);
+	shjpeg_jpu_setreg32(data, JPU_JINTS, ~ints & JPU_JINTS_MASK);
+
+	if (ints &
+	    (JPU_JINTS_INS3_HEADER | JPU_JINTS_INS5_ERROR |
+	     JPU_JINTS_INS6_DONE))
+		shjpeg_jpu_setreg32(data, JPU_JCCMD, JPU_JCCMD_END);
+
+	D_INFO("libshjpeg: JPU interrupt 0x%08x(%08x) "
+		"(veu_linebuf: %d, jpeg_linebuf: %d, "
+		"jpeg_linebufs: %d, jpeg_line: %d, "
+		"jpeg_buffers: %d)",
+	       ints, shjpeg_jpu_getreg32(data, JPU_JINTS),
+	       data->veu_linebuf, data->jpeg_linebuf,
+	       data->jpeg_linebufs, data->jpeg_line,
+	       data->jpeg_buffers);
+
+	if (ints) {
+		process_jpu_ints(ints, context, data, done);
+	}
+
+	/* re-enable IRQ */
+	val = 1;
+	if (write(data->jpu_uio_fd, &val, sizeof(val)) != sizeof(val)) {
+		D_PERROR("libshjpeg: write() to uio failed.");
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
+shjpeg_process_veu(shjpeg_context_t * context, shjpeg_internal_t * data)
+{
+	int val;
+
+	D_INFO
+	    ("libshjpeg: VEU IRQ - VEVTR=%08x, VSTAR=%08x, %d lines",
+	     shjpeg_veu_getreg32(data, VEU_VEVTR),
+	     shjpeg_veu_getreg32(data, VEU_VSTAR),
+	     shjpeg_veu_getreg32(data, VEU_VRFSR) >> 16);
+	shjpeg_veu_setreg32(data, VEU_VEVTR, 0);
+
+	/* read number of interrupts */
+	if (read(data->veu_uio_fd, &val, sizeof(val)) != sizeof(val)) {
+		D_ERROR ("libshjpeg: read IRQ count from VEU failed.");
+		return -1;
+	}
+
+	/* sanity check */
+	D_INFO("libshjpeg: VEU IRQ counts = %d", val);
+	D_INFO("libshjpeg: veu: done w/ LB%d", data->veu_linebuf);
+
+	data->jpeg_linebufs &= ~(1 << data->veu_linebuf);
+
+	/* if JPU is not running - start */
+	if (!data->jpeg_end && !data->jpu_running &&
+	    (!(data-> jpeg_linebufs & (1 << data-> jpeg_linebuf)))) {
+		D_INFO("libshjpeg: jpu: process LB%d", data->jpeg_linebuf);
+
+		if (data->jpu_lb_first_irq)
+			data->jpu_lb_first_irq = 0;
+		else
+			shjpeg_jpu_setreg32(data, JPU_JCCMD,
+				JPU_JCCMD_LCMD1 | JPU_JCCMD_LCMD2);
+		data->jpu_running = 1;
+	} else {
+		D_INFO("libshjpeg: jpu: wait for LB%d", data->jpeg_linebuf);
+	}
+
+	/* point to the other buffer */
+	shjpeg_veu_stop(data);
+	data->veu_linebuf = (data->veu_linebuf + 1) % 2;
+
+	/* re-enable IRQ */
+	val = 1;
+	if (write(data->veu_uio_fd, &val, sizeof(val)) != sizeof(val)) {
+		D_ERROR("libshjpeg: re-enabling IRQ failed.\n");
+		return -1;
+	}
+
+	return 0;
+}
+
 /*
  * Main JPU control
  */
-
 int
 shjpeg_jpu_run(shjpeg_context_t * context,
 	       shjpeg_internal_t * data, shjpeg_jpu_t * jpeg)
 {
-	int ret, ints, val, done;
+	int ret, val, done;
 	int encode = (jpeg->flags & SHJPEG_JPU_FLAG_ENCODE);
 	int convert = (jpeg->flags & SHJPEG_JPU_FLAG_CONVERT);
 	int softconvert = (jpeg->flags & SHJPEG_JPU_FLAG_SOFTCONVERT);
@@ -321,107 +421,13 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 		}
 
 		if (fds[0].revents & POLLIN) {
-			/* read number of interrupts */
-			if (read(data->jpu_uio_fd, &val, sizeof(val)) !=
-			    sizeof(val)) {
-				D_ERROR
-				    ("libshjpeg: no IRQ - read() failed");
-				errno = EIO;
+			if (shjpeg_process_jpu(context, data, &done) < 0)
 				return -1;
-			}
-
-			/* sanity check */
-			D_INFO("libshjpeg: IRQ counts = %d", val);
-
-			/* get JPU IRQ stats */
-			ints = shjpeg_jpu_getreg32(data, JPU_JINTS);
-			shjpeg_jpu_setreg32(data, JPU_JINTS,
-					    ~ints & JPU_JINTS_MASK);
-
-			if (ints &
-			    (JPU_JINTS_INS3_HEADER | JPU_JINTS_INS5_ERROR |
-			     JPU_JINTS_INS6_DONE))
-				shjpeg_jpu_setreg32(data, JPU_JCCMD,
-						    JPU_JCCMD_END);
-
-			D_INFO("libshjpeg: JPU interrupt 0x%08x(%08x) "
-				"(veu_linebuf: %d, jpeg_linebuf: %d, "
-				"jpeg_linebufs: %d, jpeg_line: %d, "
-				"jpeg_buffers: %d)",
-			       ints, shjpeg_jpu_getreg32(data, JPU_JINTS),
-			       data->veu_linebuf, data->jpeg_linebuf,
-			       data->jpeg_linebufs, data->jpeg_line,
-			       data->jpeg_buffers);
-
-			if (ints) {
-				process_jpu_ints(ints, context, data, &done);
-			}
-
-			/* re-enable IRQ */
-			val = 1;
-			if (write(data->jpu_uio_fd, &val, sizeof(val)) !=
-			    sizeof(val)) {
-				D_PERROR
-				    ("libshjpeg: write() to uio failed.");
-				return -1;
-			}
 		}
 
-		if (fds[1].revents & POLLIN) {	// VEU IRQ
-			D_INFO
-			    ("libshjpeg: VEU IRQ - VEVTR=%08x, VSTAR=%08x, "
-			     "%d lines",
-			     shjpeg_veu_getreg32(data, VEU_VEVTR),
-			     shjpeg_veu_getreg32(data, VEU_VSTAR),
-			     shjpeg_veu_getreg32(data, VEU_VRFSR) >> 16);
-			shjpeg_veu_setreg32(data, VEU_VEVTR, 0);
-
-			/* read number of interrupts */
-			if (read(data->veu_uio_fd, &val, sizeof(val)) !=
-			    sizeof(val)) {
-				D_ERROR ("libshjpeg: read IRQ count from "
-					 "VEU failed.");
+		if (fds[1].revents & POLLIN) {
+			if (shjpeg_process_veu(context, data) < 0)
 				return -1;
-			}
-
-			/* sanity check */
-			D_INFO("libshjpeg: VEU IRQ counts = %d", val);
-			D_INFO("libshjpeg: veu: done w/ LB%d",
-			       data->veu_linebuf);
-
-			data->jpeg_linebufs &= ~(1 << data->veu_linebuf);
-
-			/* if JPU is not running - start */
-			if (!data->jpeg_end && !data->jpu_running &&
-			    (!(data-> jpeg_linebufs &
-					(1 << data-> jpeg_linebuf)))) {
-				D_INFO("libshjpeg: jpu: process LB%d",
-				       data->jpeg_linebuf);
-
-				if (data->jpu_lb_first_irq)
-					data->jpu_lb_first_irq = 0;
-				else
-					shjpeg_jpu_setreg32(data, JPU_JCCMD,
-							    JPU_JCCMD_LCMD1 |
-							    JPU_JCCMD_LCMD2);
-				data->jpu_running = 1;
-			} else {
-				D_INFO("libshjpeg: jpu: wait for LB%d",
-				       data->jpeg_linebuf);
-			}
-
-			/* point to the other buffer */
-			shjpeg_veu_stop(data);
-			data->veu_linebuf = (data->veu_linebuf + 1) % 2;
-
-			/* re-enable IRQ */
-			val = 1;
-			if (write(data->veu_uio_fd, &val, sizeof(val)) !=
-			    sizeof(val)) {
-				D_ERROR
-				    ("libshjpeg: re-enabling IRQ failed.\n");
-				return -1;
-			}
 		}
 
 		/*
