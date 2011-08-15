@@ -450,6 +450,9 @@ main(int argc, char *argv[])
 	case 16:
 	    format = SHJPEG_PF_RGB16;
 	    break;
+	case 0:
+	    format = SHJPEG_PF_YCbCr;
+	    break;
 	default:
 	    fprintf(stderr, "unsupported bpp (%d)\n", bpp);
 	    return 1;
