@@ -281,9 +281,26 @@ shjpeg_sw_convert(shjpeg_context_t * context, shjpeg_internal_t * data, shjpeg_j
 		}
 		jpeg->soft_offset += context->pitch * lines;
 		jpeg->soft_line += lines;
+
+		data->jpeg_linebufs &= ~(1 << data->veu_linebuf);
+
+		/* if JPU is not running - start */
+		if (!data->jpeg_end && !data->jpu_running &&
+			(!(data-> jpeg_linebufs & (1 << data-> jpeg_linebuf)))) {
+			D_INFO("libshjpeg: jpu: process LB%d", data->jpeg_linebuf);
+
+			if (data->jpu_lb_first_irq)
+				data->jpu_lb_first_irq = 0;
+			else
+				shjpeg_jpu_setreg32(data, JPU_JCCMD,
+					JPU_JCCMD_LCMD1 | JPU_JCCMD_LCMD2);
+			data->jpu_running = 1;
+		}
+
 		data->veu_linebuf = (data->veu_linebuf + 1) % 2;
 	} else if (data->jpeg_encode) {
 		data->veu_linebuf = (data->veu_linebuf + 1) % 2;
+		data->jpeg_linebufs = 0;
 		D_INFO("libshjpeg: soft: clear LB%d", data->veu_linebuf);
 	}
 }
@@ -372,50 +389,9 @@ shjpeg_jpu_run(shjpeg_context_t * context,
 
 		} else if (softconvert && !data->jpeg_end &&
 				!data->jpu_running) {
-			void *ydata, *cdata;
-			int lines;
-			int i;
-			/* convert first buffer and if JPU is not
-			   running - start */
-			//process both bufers to kick off the state machine
-			for (i=0;i<2;i++) {
-				D_INFO("libshjpeg: soft: process LB%d %d -> %d",
-					data->veu_linebuf,
-					jpeg->soft_line,
-					jpeg->soft_line + lines);
-
-				soft_get_src_jpu(data, &ydata, &cdata);
-				lines = context->height - jpeg->soft_line;
-				lines = lines > SHJPEG_JPU_LINEBUFFER_HEIGHT ?
-				SHJPEG_JPU_LINEBUFFER_HEIGHT : lines;
-
-				if (lines <=  0)
-					continue;
-
-				data->jpeg_linebufs &=
-						~(1 << data->veu_linebuf);
-
-				soft_fromYCbCr(data, context, ydata, cdata,
-					data->user_jpeg_virt +
-					jpeg->soft_offset, lines);
-				jpeg->soft_offset += lines * context->pitch;
-				jpeg->soft_line += lines;
-				data->veu_linebuf = (data->veu_linebuf + 1) % 2;
-			}
-
-			if (!(data->jpeg_linebufs &
-					(1 << data->jpeg_linebuf))) {
-				D_INFO("libshjpeg: jpu: process LB%d",
-					data->jpeg_linebuf);
-
-				if (data->jpu_lb_first_irq)
-					data->jpu_lb_first_irq = 0;
-				else
-					shjpeg_jpu_setreg32(data, JPU_JCCMD,
-						JPU_JCCMD_LCMD1 |
-						JPU_JCCMD_LCMD2);
-				data->jpu_running = 1;
-			}
+			/* convert first 2 buffers */
+			shjpeg_sw_convert(context, data, jpeg);
+			shjpeg_sw_convert(context, data, jpeg);
 		}
 		if (data->jpeg_buffers && !data->jpeg_writing) {
 			D_INFO(" '-> write start (buffers: %d)",
