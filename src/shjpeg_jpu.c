@@ -69,10 +69,31 @@ void shjpeg_jpu_reset(shjpeg_internal_t * data)
 	while (shjpeg_jpu_getreg32(data, JPU_JCCMD) & 0x1000)
 		usleep(1);
 }
-static
-void process_jpu_ints(int ints, shjpeg_context_t *context,  
-		shjpeg_internal_t *data, int *done) {
 
+/* if JPU is not running - start */
+static void
+shjpeg_start_jpu_line(shjpeg_context_t *context, shjpeg_internal_t *data)
+{
+	if (!(data->jpeg_linebufs & (1 << data->jpeg_linebuf))) {
+		if (data->jpu_lb_first_irq) {
+			D_INFO("libshjpeg: jpu: start LB%d (first irq)",
+				data->jpeg_linebuf);
+			data->jpu_lb_first_irq = 0;
+		} else {
+			D_INFO("libshjpeg: jpu: start LB%d (LCMDx)",
+				data->jpeg_linebuf);
+			shjpeg_jpu_setreg32(data, JPU_JCCMD,
+				JPU_JCCMD_LCMD1 | JPU_JCCMD_LCMD2);
+		}
+
+		data->jpu_running = 1;
+	}
+}
+
+static void
+process_jpu_ints(int ints, shjpeg_context_t *context,
+		shjpeg_internal_t *data, int *done)
+{
 	/* Header */
 	if (ints & JPU_JINTS_INS3_HEADER) {
 		/* Note: This IRQ is never enabled */
@@ -105,37 +126,19 @@ void process_jpu_ints(int ints, shjpeg_context_t *context,
 
 	/* Line buffer processing complete */
 	if (ints & (JPU_JINTS_INS11_LINEBUF0 | JPU_JINTS_INS12_LINEBUF1)) {
-		D_INFO ("libshjpeg: jpu: done w/ LB%d", data->jpeg_linebuf);
+		D_INFO ("libshjpeg: jpu: finished LB%d", data->jpeg_linebuf);
 
 		/* mark buffer as ready, and move pointer */
 		data->jpeg_linebufs |= (1 << data->jpeg_linebuf);
 		data->jpeg_linebuf = (data->jpeg_linebuf + 1) % 2;
 
-		/* * check if the next buffer is not
-		 * ready yet. if so, start JPU.  */
 		data->jpu_running = 0;
-		if (!(data->jpeg_linebufs & (1 << data->jpeg_linebuf))) {
-			if (!data->jpeg_end) {
-				D_INFO ("libshjpeg: jpu: process LB%d",
-				     data->jpeg_linebuf);
-
-			if (data->jpu_lb_first_irq)
-				data->jpu_lb_first_irq = 0;
-			else
-				shjpeg_jpu_setreg32 (data, JPU_JCCMD,
-				     JPU_JCCMD_LCMD2 | JPU_JCCMD_LCMD1);
-				data->jpu_running = 1;
-			}
-		} else {
-			D_INFO ("libshjpeg: jpu: wait for LB%d",
-				data->jpeg_linebuf);
-		}
+		shjpeg_start_jpu_line(context, data);
 	}
 
 	/* Loaded */
 	if (ints & JPU_JINTS_INS13_LOADED) {
-		D_INFO ("libshjpeg: load complete (%d/%d)",
-		     data->jpeg_buffer, data->jpeg_writing);
+		D_INFO ("libshjpeg: load complete (%d)", data->jpeg_buffer);
 		data->jpeg_buffers &= ~(1 << data->jpeg_buffer);
 		data->jpeg_buffer = (data->jpeg_buffer + 1) % 2;
 		data->jpeg_writing--;
@@ -144,8 +147,7 @@ void process_jpu_ints(int ints, shjpeg_context_t *context,
 
 	/* Reload - means input buffer has been used, need more data */
 	if (ints & JPU_JINTS_INS14_RELOAD) {
-		D_INFO ("libshjpeg: reload complete (%d/%d)",
-			data->jpeg_buffer, data->jpeg_reading);
+		D_INFO ("libshjpeg: reload complete (%d)", data->jpeg_buffer);
 		data->jpeg_buffers &= ~(1 << data->jpeg_buffer);
 		data->jpeg_buffer = (data->jpeg_buffer + 1) % 2;
 
@@ -170,9 +172,6 @@ shjpeg_process_jpu(shjpeg_context_t * context, shjpeg_internal_t * data, int *do
 		errno = EIO;
 		return -1;
 	}
-
-	/* sanity check */
-	D_INFO("libshjpeg: IRQ counts = %d", val);
 
 	/* get JPU IRQ stats */
 	ints = shjpeg_jpu_getreg32(data, JPU_JINTS);
@@ -244,26 +243,12 @@ shjpeg_process_veu(shjpeg_context_t * context, shjpeg_internal_t * data)
 		return -1;
 	}
 
-	/* sanity check */
-	D_INFO("libshjpeg: VEU IRQ counts = %d", val);
-	D_INFO("libshjpeg: veu: done w/ LB%d", data->veu_linebuf);
+	D_INFO("libshjpeg: veu: finished LB%d", data->veu_linebuf);
 
 	data->jpeg_linebufs &= ~(1 << data->veu_linebuf);
 
-	/* if JPU is not running - start */
-	if (!data->jpeg_end && !data->jpu_running &&
-	    (!(data->jpeg_linebufs & (1 << data->jpeg_linebuf)))) {
-		D_INFO("libshjpeg: jpu: process LB%d", data->jpeg_linebuf);
-
-		if (data->jpu_lb_first_irq)
-			data->jpu_lb_first_irq = 0;
-		else
-			shjpeg_jpu_setreg32(data, JPU_JCCMD,
-				JPU_JCCMD_LCMD1 | JPU_JCCMD_LCMD2);
-		data->jpu_running = 1;
-	} else {
-		D_INFO("libshjpeg: jpu: wait for LB%d", data->jpeg_linebuf);
-	}
+	if (!data->jpeg_end && !data->jpu_running)
+		shjpeg_start_jpu_line(context, data);
 
 	/* point to the other buffer */
 	shjpeg_veu_stop(data);
@@ -304,17 +289,8 @@ shjpeg_sw_convert(shjpeg_context_t * context, shjpeg_internal_t * data, shjpeg_j
 
 		data->jpeg_linebufs &= ~(1 << data->veu_linebuf);
 
-		/* if JPU is not running - start */
-		if (!data->jpeg_end && !data->jpu_running &&
-			(!(data->jpeg_linebufs & (1 << data->jpeg_linebuf)))) {
-			D_INFO("libshjpeg: jpu: process LB%d", data->jpeg_linebuf);
-
-			if (data->jpu_lb_first_irq)
-				data->jpu_lb_first_irq = 0;
-			else
-				shjpeg_jpu_setreg32(data, JPU_JCCMD, JPU_JCCMD_LCMD1 | JPU_JCCMD_LCMD2);
-			data->jpu_running = 1;
-		}
+		if (!data->jpeg_end && !data->jpu_running)
+			shjpeg_start_jpu_line(context, data);
 
 		data->veu_linebuf = (data->veu_linebuf + 1) % 2;
 	} else if (data->jpeg_encode) {
