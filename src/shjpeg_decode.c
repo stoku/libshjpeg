@@ -26,6 +26,8 @@
 #include <dirent.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/types.h>
+#include <pthread.h>
 #include <setjmp.h>
 
 #include <shjpeg/shjpeg.h>
@@ -95,12 +97,11 @@ decode_hw(shjpeg_internal_t * data,
 
 	D_DEBUG_AT(SH7722_JPEG, "		 -> locking JPU...");
 
-	/* Locking JPU using flock */
-	if (flock(data->jpu_uio_fd, LOCK_EX) < 0) {
+	/* Locking JPU using uiomux_lock */
+	if (uiomux_lock(data->uiomux, UIOMUX_JPU) < 0) {
 		D_PERROR("libshjpeg: Could not lock JPEG engine!");
 		return -1;
 	}
-
 	D_DEBUG_AT(SH7722_JPEG, "		 -> loading...");
 
 	/* Fill first reload buffer. */
@@ -115,7 +116,7 @@ decode_hw(shjpeg_internal_t * data,
 	if (ret) {
 		D_DERROR(ret,
 			 "libshjpeg: Could not fill first reload buffer!");
-		if (flock(data->jpu_uio_fd, LOCK_UN) < 0) {
+		if (uiomux_unlock(data->uiomux, UIOMUX_JPU) < 0) {
 			D_PERROR("libshjpeg: unlock UIO failed.");
 		}
 		return -1;
@@ -200,7 +201,8 @@ decode_hw(shjpeg_internal_t * data,
 			context->pitch = pitch;
 			if (get_frame_buffer_virtual(data, context,
 					&mdata, format, phys) < 0) {
-				return -1;
+				D_ERROR("Get vframe buff err\n");
+				goto end;
 			}
 		} else {
 			jpeg.flags |= SHJPEG_JPU_FLAG_CONVERT;
@@ -232,6 +234,7 @@ decode_hw(shjpeg_internal_t * data,
 			shveu_set_dst_phys(data->veu, phys, phys + pitch * height);
 		}
 	}
+
 
 	D_DEBUG_AT(SH7722_JPEG, " -> starting...");
 
@@ -290,12 +293,12 @@ decode_hw(shjpeg_internal_t * data,
 
 	free_frame_buffer_virtual(&mdata);
 
-	/* Unlocking JPU using flock */
-	if (flock(data->jpu_uio_fd, LOCK_UN) < 0) {
+end:
+	/* Unlocking JPU using uiomux_unlock */
+	if (uiomux_unlock(data->uiomux, UIOMUX_JPU)) {
 		D_PERROR("libshjpeg: Could not unlock JPEG engine!");
 		ret = -1;
 	}
-
 	return ret;
 }
 

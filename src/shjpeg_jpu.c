@@ -144,70 +144,42 @@ static int
 wait_and_process_jpu(shjpeg_context_t * context,
 		shjpeg_internal_t * data, int *done)
 {
-	int ret, ints, val;
+	int ret, ints;
 
-	struct pollfd fds[] = {
-		{
-		 .fd = data->jpu_uio_fd,
-		 .events = POLLIN,
-		 }
+	struct timeval timeout = {
+		.tv_sec = 1,
+		.tv_usec = 0,
 	};
 
-	// wait for IRQ. time out set to 1sec.
-	fds[0].revents = 0;
-	ret = poll(fds, 1, 1000);
-
 	// timeout or some error.
-	if (ret == 0) {
+	ret = uiomux_sleep_timeout(data->uiomux, UIOMUX_JPU, &timeout);
+	if (ret < 0) {
 		D_ERROR ("libshjpeg: jpu: Error TIMEOUT");
 		errno = ETIMEDOUT;
 		return -1;
 	}
 
-	if (ret < 0) {
-		D_ERROR("libshjpeg: no IRQ - poll() failed");
-		return -1;
+	/* get JPU IRQ stats */
+	ints = shjpeg_jpu_getreg32(data, JPU_JINTS);
+	shjpeg_jpu_setreg32(data, JPU_JINTS, ~ints & JPU_JINTS_MASK);
+
+	D_INFO("libshjpeg: JPU interrupt 0x%08x(%08x) "
+		"(veu_linebuf: %d, jpeg_linebuf: %d, "
+		"jpeg_buffers: %d)",
+		ints, shjpeg_jpu_getreg32(data, JPU_JINTS),
+		data->veu_linebuf, data->jpeg_linebuf,
+		data->jpeg_buffers);
+
+	if (ints) {
+		process_jpu_ints(ints, context, data, done);
 	}
 
-	/* Handle IRQs */
-	if (fds[0].revents & POLLIN) {
-		/* read number of interrupts */
-		if (read(data->jpu_uio_fd, &val, sizeof(val)) != sizeof(val)) {
-			D_ERROR ("libshjpeg: no IRQ - read() failed");
-			errno = EIO;
-			return -1;
-		}
-
-		/* get JPU IRQ stats */
-		ints = shjpeg_jpu_getreg32(data, JPU_JINTS);
-		shjpeg_jpu_setreg32(data, JPU_JINTS, ~ints & JPU_JINTS_MASK);
-
-		D_INFO("libshjpeg: JPU interrupt 0x%08x(%08x) "
-			"(veu_linebuf: %d, jpeg_linebuf: %d, "
-			"jpeg_buffers: %d)",
-			ints, shjpeg_jpu_getreg32(data, JPU_JINTS),
-			data->veu_linebuf, data->jpeg_linebuf,
-			data->jpeg_buffers);
-
-		if (ints) {
-			process_jpu_ints(ints, context, data, done);
-		}
-
-		if (ints &
-		    (JPU_JINTS_INS3_HEADER | JPU_JINTS_INS5_ERROR |
-		     JPU_JINTS_INS10_XFER_DONE)) {
-			D_INFO ("libshjpeg: JPU_JCCMD:END");
-			shjpeg_jpu_setreg32(data, JPU_JCCMD, JPU_JCCMD_END);
-		}
-
-		/* re-enable IRQ */
-		val = 1;
-		if (write(data->jpu_uio_fd, &val, sizeof(val)) != sizeof(val)) {
-			D_PERROR("libshjpeg: write() to uio failed.");
-			return -1;
-		}
+	if (ints &
+	    (JPU_JINTS_INS3_HEADER | JPU_JINTS_INS5_ERROR |
+	     JPU_JINTS_INS10_XFER_DONE)) {
+		D_INFO ("libshjpeg: JPU_JCCMD:END");
+		shjpeg_jpu_setreg32(data, JPU_JCCMD, JPU_JCCMD_END);
 	}
-
 	return 0;
 }
 

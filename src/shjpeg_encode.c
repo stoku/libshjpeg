@@ -100,8 +100,8 @@ encode_hw(shjpeg_internal_t * data,
 
 	D_DEBUG_AT(SH7722_JPEG, "	 -> locking JPU...");
 
-	/* Locking JPU using flock */
-	if (flock(data->jpu_uio_fd, LOCK_EX) < 0) {
+	/* Locking JPU using uiomux_lock */
+	if (uiomux_lock (data->uiomux, UIOMUX_JPU) < 0) {
 		D_PERROR("libshjpeg: Could not lock JPEG engine!");
 		return -1;
 	}
@@ -285,8 +285,8 @@ encode_hw(shjpeg_internal_t * data,
 
 	free_frame_buffer_virtual(&mdata);
 
-	/* Unlocking JPU using flock */
-	if (flock(data->jpu_uio_fd, LOCK_UN) < 0) {
+	/* Unlocking JPU using uiomux_unlock */
+	if (uiomux_unlock(data->uiomux, UIOMUX_JPU)) {
 		ret = -1;
 		D_PERROR("libshjpeg: Could not unlock JPEG engine!");
 	}

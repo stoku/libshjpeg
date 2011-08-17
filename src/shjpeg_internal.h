@@ -22,16 +22,26 @@
 #include <shveu/shveu.h>
 #include <shjpeg/shjpeg_types.h>
 #include "shjpeg_utils.h"
+#include <uiomux/uiomux.h>
+
+enum {
+	UIOMUX_JPU = (1 << 0),
+};
 
 /*
  * private data struct of SH7722_JPEG
+ * This struct is statically instanced once per
+ * process.  This structure should not be instanced
+ * dynamically or in a fucntion scope as it contains
+ * the mutexes and locks (via UIOMux) necessary for
+ * thread safety.
  */
 
 typedef struct {
+	pthread_mutex_t ref_mutex;
 	int ref_count;		// reference counter
 
-	int jpu_uio_num;	// ID for JPU UIO
-	int jpu_uio_fd;		// fd for JPU UIO
+	UIOMux *uiomux;
 
 	void *jpeg_virt;	// virt addr of cont buffer
 	unsigned long jpeg_phys;	// phys addr of cont buffer
@@ -48,11 +58,6 @@ typedef struct {
 	unsigned long jpu_size;	// size of JPU reg range
 
 	SHVEU *veu;
-
-	/* uio device list */
-	int uio_count;		// number of UIO device
-	char **uio_device;	// list of uio device
-	char **uio_dpath;	// list of uio device path
 
 	/* internal to state machine */
 	uint32_t jpeg_buffers;
