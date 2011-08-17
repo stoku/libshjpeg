@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <getopt.h>
 #include <time.h>
 
@@ -143,7 +144,7 @@ int main(int argc, char *argv[])
     IDirectFBFont *font;
     IDirectFBEventBuffer *events;
     DFBFontDescription fdsc;
-    double scale_w, scale_h, scaler;
+    double scale_w, scale_h, scaler = 0;
     int target_w, target_h;
     int offset_x, offset_y;
     int screen_width;
@@ -155,7 +156,6 @@ int main(int argc, char *argv[])
     static int fd;
     unsigned long jpeg_phys;
     void *jpeg_virt;
-    size_t jpeg_size;
 
     int n;
     char path[PATH_MAX];
@@ -271,7 +271,7 @@ int main(int argc, char *argv[])
     }
 
     /* For all files */
-    while (dirent = readdir(dp)) {
+    while ((dirent = readdir(dp))) {
 	fprintf(stderr, "Processing - %s\n", dirent->d_name);
 
 	if (dirent->d_type == DT_DIR) {
