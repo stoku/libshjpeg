@@ -3,7 +3,7 @@
 #
 
 AM_CPPFLAGS = $(INCLTDL) -I$(top_srcdir)/include
-if MAKE_JPEG_WRAPPER
+if CUSTOM_JPEG_LIB
 AM_CPPFLAGS +=	-I$(libjpeg_inc_path)
 endif
 AM_CFLAGS = -Wall -Werror $(UIOMUX_CFLAGS) $(SHVEU_CFLAGS)

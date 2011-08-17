@@ -4,7 +4,7 @@
 #
 AM_CFLAGS = -Wall -Werror
 AM_CPPFLAGS = -I$(top_srcdir)/include
-if MAKE_JPEG_WRAPPER
+if CUSTOM_JPEG_LIB
 AM_CPPFLAGS +=	-I$(libjpeg_inc_path)
 endif
 
