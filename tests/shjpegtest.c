@@ -296,7 +296,7 @@ print_usage() {
 	    "  -q, --quiet		 no messages from this program.\n"
 	    "  -d[<ppm>], --dump[=<ppm>] dump decoded image in PPM (default: test.ppm).\n"
 	    "  -D[<bmp>], --bmp[=<bmp>]  dump decoded image in BMP (default: test.bmp).\n"
-	    "  -b <bpp>, --bpp=<bpp>     Bits-per-pixel for BMP image (default: 24)"
+	    "  -b <bpp>, --bpp=<bpp>     Bits-per-pixel for BMP image (default: 24)\n"
 	    "  -p <phys>, --phys=<phys>  specify physical memory to use.\n"
 	    "  -n, --no-libjpeg          disable fallback to libjpeg.\n");
 }
@@ -378,7 +378,7 @@ main(int argc, char *argv[])
 	    break;
 
 	case 'p':
-	    phys = strtol(optarg, NULL, 0);
+	    phys = (unsigned long) strtoll(optarg, NULL, 0);
 	    break;
 
 	default:
