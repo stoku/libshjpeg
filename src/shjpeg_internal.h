@@ -73,18 +73,14 @@ typedef struct {
 	int jpeg_buffer;
 	uint32_t jpeg_error;
 	int jpeg_encode;
-	int jpeg_reading;
-	int jpeg_writing;
-	int jpeg_height;
 	int jpeg_end;
-	uint32_t jpeg_linebufs;
 	int jpeg_linebuf;
 
-	int jpu_running;
-	int jpu_lb_first_irq;
+	int jpu_line_bufs_pending;
+	int jpu_line_bufs_done;
 
 	int veu_linebuf;
-	int veu_running;
+	int veu_line_bufs_done;
 
 	/* internal data */
 	shjpeg_context_t *context;

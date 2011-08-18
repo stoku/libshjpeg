@@ -166,6 +166,7 @@ decode_hw(shjpeg_internal_t * data,
 		shjpeg_jpu_setreg32(data, JPU_JINTE,
 				    JPU_JINTS_INS5_ERROR |
 				    JPU_JINTS_INS6_DONE |
+				    JPU_JINTS_INS10_XFER_DONE |
 				    (reload ?  JPU_JINTS_INS14_RELOAD : 0));
 		shjpeg_jpu_setreg32(data, JPU_JIFDCNT,
 				    JPU_JIFDCNT_SWAP_4321 |
@@ -181,6 +182,7 @@ decode_hw(shjpeg_internal_t * data,
 		shjpeg_jpu_setreg32(data, JPU_JINTE,
 				    JPU_JINTS_INS5_ERROR |
 				    JPU_JINTS_INS6_DONE |
+				    JPU_JINTS_INS10_XFER_DONE |
 				    JPU_JINTS_INS11_LINEBUF0 |
 				    JPU_JINTS_INS12_LINEBUF1 |
 				    (reload ?  JPU_JINTS_INS14_RELOAD : 0));

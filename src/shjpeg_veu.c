@@ -149,14 +149,17 @@ void shjpeg_veu_set_dst_jpu(shjpeg_internal_t * data)
 
 void shjpeg_veu_set_src_jpu(shjpeg_internal_t * data)
 {
-	shjpeg_veu_setreg32(data, VEU_VSAYR,
-			    (data->veu_linebuf) ?
-			    shjpeg_jpu_getreg32(data, JPU_JIFDDYA2) :
-			    shjpeg_jpu_getreg32(data, JPU_JIFDDYA1));
-	shjpeg_veu_setreg32(data, VEU_VSACR,
-			    (data->veu_linebuf) ?
-			    shjpeg_jpu_getreg32(data, JPU_JIFDDCA2) :
-			    shjpeg_jpu_getreg32(data, JPU_JIFDDCA1));
+	u32 ydata, cdata;
+
+	if (!data->veu_linebuf) {
+		ydata = data->jpeg_lb1;
+	} else {
+		ydata = data->jpeg_lb2;
+	}
+	cdata = ydata + SHJPEG_JPU_LINEBUFFER_SIZE_Y;
+
+	shjpeg_veu_setreg32(data, VEU_VSAYR, ydata);
+	shjpeg_veu_setreg32(data, VEU_VSACR, cdata);
 }
 
 /*
@@ -175,7 +178,6 @@ void shjpeg_veu_set_src(shjpeg_internal_t * data, u32 src_y, u32 src_c)
 
 void shjpeg_veu_start(shjpeg_internal_t * data, int bundle_mode)
 {
-	data->veu_running = 1;
 	shjpeg_veu_setreg32(data, VEU_VESTR,
 			    (bundle_mode) ? 0x101 : 0x001);
 }
@@ -185,5 +187,5 @@ void shjpeg_veu_start(shjpeg_internal_t * data, int bundle_mode)
  */
 void shjpeg_veu_stop(shjpeg_internal_t * data)
 {
-	data->veu_running = 0;
+	/* Nothing */
 }
