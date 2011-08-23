@@ -8,7 +8,7 @@ if CUSTOM_JPEG_LIB
 AM_CPPFLAGS +=	-I$(libjpeg_inc_path)
 endif
 
-bin_PROGRAMS = shjpegtest v2mjpeg libjpegtest
+bin_PROGRAMS = shjpegtest v2mjpeg libjpegtest shjpeg_multithread
 if MAKE_DIRECTFB_TEST
 bin_PROGRAMS += shjpegshow
 
@@ -25,3 +25,7 @@ v2mjpeg_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS)
 
 libjpegtest_SOURCES = libjpeg_test.c
 libjpegtest_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS)
+
+shjpeg_multithread_SOURCES = shjpeg_multithread.c
+shjpeg_multithread_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS)
+shjpeg_multithread_CFLAGS = $(AM_CFLAGS) $(UIOMUX_CFLAGS)
