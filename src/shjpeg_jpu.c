@@ -59,8 +59,6 @@
  */
 void shjpeg_jpu_reset(shjpeg_internal_t * data)
 {
-	/* bus reset */
-	shjpeg_jpu_setreg32(data, JPU_JCCMD, 0x80);
 
 	/* software reset */
 	shjpeg_jpu_setreg32(data, JPU_JCCMD, 0x1000);
@@ -68,6 +66,12 @@ void shjpeg_jpu_reset(shjpeg_internal_t * data)
 	/* wait for reset */
 	while (shjpeg_jpu_getreg32(data, JPU_JCCMD) & 0x1000)
 		usleep(1);
+
+	/* bus reset */
+	shjpeg_jpu_setreg32(data, JPU_JCCMD, 0x80);
+
+	/* clear any outstanding interrupts */
+	shjpeg_jpu_setreg32(data, JPU_JCCMD, 0x6);
 }
 
 static void
