@@ -42,6 +42,12 @@
 
 static void uio_shutdown(shjpeg_internal_t * data)
 {
+	uiomux_free(data->uiomux, UIOMUX_JPU, data->jpeg_virt,
+		SHJPEG_JPU_RELOAD_SIZE * 2);
+	uiomux_free(data->uiomux, UIOMUX_JPU, data->jpeg_lb1_virt,
+		SHJPEG_JPU_LINEBUFFER_SIZE);
+	uiomux_free(data->uiomux, UIOMUX_JPU, data->jpeg_lb2_virt,
+		SHJPEG_JPU_LINEBUFFER_SIZE);
 	shveu_close(data->veu);
 	uiomux_close(data->uiomux);
 
