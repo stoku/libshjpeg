@@ -78,7 +78,7 @@ jpeg_src_read_header(void *private_data, size_t * n_bytes, void *dataptr)
 	j_decompress_ptr cinfo = (j_decompress_ptr) cctx->cinfo;
 	shjpeg_context_t *context = cctx->context;
 	buffer_cache_context_t *cache_con;
-	cache_con = context->cache_con;
+	cache_con = cictxt.cache_con;
 
 	size_t copybytes = 0, copied, local_n_bytes = *n_bytes;
 

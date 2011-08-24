@@ -155,7 +155,6 @@ boolean shjpeg_start_decompress(j_decompress_ptr cinfo)
 		TRACEMS(cinfo, 1, SHJMSG_LIBJPEG_MODE);
 		return libjpeg_hooks.jpeg_start_decompress(cinfo);
 	}
-	context->cache_con = &cache_con;
 	context->width = cinfo->output_width;
 	context->height = cinfo->output_height;
 	context->pitch = context->width * cinfo->out_color_components;

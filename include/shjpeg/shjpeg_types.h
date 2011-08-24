@@ -177,18 +177,6 @@ struct shjpeg_buffer {
     size_t              size;
 };
 
-#ifdef LIBJPEG_WRAPPER_SUPPORT
-typedef struct {
-        boolean (*fill_buffer_function) (j_decompress_ptr cinfo);
-        void *buffer_cache;
-        void *current_start;
-        int last_buffer_size;
-        int total_buffer_size;
-	void *cache_read;
-	void *current_read;
-} buffer_cache_context_t;
-#endif
-
 struct shjpeg_context_struct {
     //! Width of the current image.
     int		width;
@@ -234,13 +222,6 @@ struct shjpeg_context_struct {
    /*! private data -
         currently active compression object*/
     j_common_ptr active_object;
-
-   /*! private data -
-        input buffer cache*/
-    buffer_cache_context_t *cache_con;
-
-   /*! True if the image to be compressed or decompressed is grayscale*/
-
 
 #endif
 };

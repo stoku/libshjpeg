@@ -20,6 +20,16 @@
 #include "shjpeg/shjpeg_types.h"
 
 typedef struct {
+        boolean (*fill_buffer_function) (j_decompress_ptr cinfo);
+        void *buffer_cache;
+        void *current_start;
+        int last_buffer_size;
+        int total_buffer_size;
+	void *cache_read;
+	void *current_read;
+} buffer_cache_context_t;
+
+typedef struct {
 	j_common_ptr cinfo;
 	shjpeg_context_t *context;
 	buffer_cache_context_t *cache_con;
