@@ -93,10 +93,9 @@ static shjpeg_pixelformat get_shjpeg_pixelformat(J_COLOR_SPACE color_space)
 	case JCS_RGB_565:
 		return SHJPEG_PF_RGB16;
 #endif
-	case JCS_GRAYSCALE:
-		//TODO: grayscale support
 	case JCS_YCbCr:
 		return SHJPEG_PF_YCbCr;
+	case JCS_GRAYSCALE:
 	default:
 		return SHJPEG_PF_NONE;
 	}
