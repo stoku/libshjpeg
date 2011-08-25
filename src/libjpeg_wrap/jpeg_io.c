@@ -22,14 +22,15 @@
 #include <string.h>
 #include <stdlib.h>
 
-/*Keep one global context for now.  Will be replaced with a
- *hash lookup based on cinfo pointer in the future*/
-extern cinfo_context cictxt;
-
 boolean cache_input_buffer(j_decompress_ptr cinfo)
 {
 	buffer_cache_context_t *cache_con;
-	cache_con = cictxt.cache_con;
+	cinfo_context_t *ctx = get_cinfo_context((j_common_ptr) cinfo);
+
+	if (!ctx)
+		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
+
+	cache_con = &ctx->cache_con;
 	if (cache_con->current_start) {
 		void *temp_buf = malloc(cache_con->total_buffer_size +
 					cache_con->last_buffer_size);
@@ -56,8 +57,8 @@ boolean cache_input_buffer(j_decompress_ptr cinfo)
 
 int jpeg_src_init(void *private_data)
 {
-	cinfo_context *cctx = (cinfo_context *) private_data;
-	j_decompress_ptr cinfo = (j_decompress_ptr) cctx->cinfo;
+	cinfo_context_t *ctx = (cinfo_context_t *) private_data;
+	j_decompress_ptr cinfo = (j_decompress_ptr) ctx->cinfo;
 
 	cinfo->src->init_source(cinfo);
 	return 0;
@@ -65,8 +66,8 @@ int jpeg_src_init(void *private_data)
 
 void jpeg_src_finalize(void *private_data)
 {
-	cinfo_context *cctx = (cinfo_context *) private_data;
-	j_decompress_ptr cinfo = (j_decompress_ptr) cctx->cinfo;
+	cinfo_context_t *ctx = (cinfo_context_t *) private_data;
+	j_decompress_ptr cinfo = (j_decompress_ptr) ctx->cinfo;
 
 	cinfo->src->term_source(cinfo);
 }
@@ -74,11 +75,11 @@ void jpeg_src_finalize(void *private_data)
 int
 jpeg_src_read_header(void *private_data, size_t * n_bytes, void *dataptr)
 {
-	cinfo_context *cctx = (cinfo_context *) private_data;
-	j_decompress_ptr cinfo = (j_decompress_ptr) cctx->cinfo;
-	shjpeg_context_t *context = cctx->context;
+	cinfo_context_t *ctx = (cinfo_context_t *) private_data;
+	j_decompress_ptr cinfo = (j_decompress_ptr) ctx->cinfo;
+	shjpeg_context_t *context = ctx->context;
 	buffer_cache_context_t *cache_con;
-	cache_con = cictxt.cache_con;
+	cache_con = &ctx->cache_con;
 
 	size_t copybytes = 0, copied, local_n_bytes = *n_bytes;
 
@@ -141,8 +142,8 @@ jpeg_src_read_header(void *private_data, size_t * n_bytes, void *dataptr)
 ************************/
 int jpeg_src_read(void *private_data, size_t * n_bytes, void *dataptr)
 {
-	cinfo_context *cctx = (cinfo_context *) private_data;
-	j_decompress_ptr cinfo = (j_decompress_ptr) cctx->cinfo;
+	cinfo_context_t *ctx = (cinfo_context_t *) private_data;
+	j_decompress_ptr cinfo = (j_decompress_ptr) ctx->cinfo;
 
 	struct jpeg_source_mgr *src = cinfo->src;
 	size_t datacnt = *n_bytes;
@@ -186,8 +187,8 @@ int jpeg_src_read(void *private_data, size_t * n_bytes, void *dataptr)
 
 int jpeg_dest_init(void *private_data)
 {
-	cinfo_context *cctx = (cinfo_context *) private_data;
-	j_compress_ptr cinfo = (j_compress_ptr) cctx->cinfo;
+	cinfo_context_t *ctx = (cinfo_context_t *) private_data;
+	j_compress_ptr cinfo = (j_compress_ptr) ctx->cinfo;
 
 	cinfo->dest->init_destination(cinfo);
 	return 0;
@@ -195,16 +196,16 @@ int jpeg_dest_init(void *private_data)
 
 void jpeg_dest_finalize(void *private_data)
 {
-	cinfo_context *cctx = (cinfo_context *) private_data;
-	j_compress_ptr cinfo = (j_compress_ptr) cctx->cinfo;
+	cinfo_context_t *ctx = (cinfo_context_t *) private_data;
+	j_compress_ptr cinfo = (j_compress_ptr) ctx->cinfo;
 
 	cinfo->dest->term_destination(cinfo);
 }
 
 int jpeg_dest_write(void *private_data, size_t * n_bytes, void *dataptr)
 {
-	cinfo_context *cctx = (cinfo_context *) private_data;
-	j_compress_ptr cinfo = (j_compress_ptr) cctx->cinfo;
+	cinfo_context_t *ctx = (cinfo_context_t *) private_data;
+	j_compress_ptr cinfo = (j_compress_ptr) ctx->cinfo;
 
 	struct jpeg_destination_mgr *dest = cinfo->dest;
 	int datacnt = *n_bytes;

@@ -17,6 +17,7 @@
  */
 
 #include <string.h>
+#include "shjpeg_internal.h"
 #include "jpeg_io.h"
 #include "override.h"
 #include "libmessage.h"
@@ -25,12 +26,46 @@
 
 extern hooks_t libjpeg_hooks, *active_hooks, withjpu_hooks, jpumode_hooks;
 
-/*Keep one global context for now.  Will be replaced with a
- *hash lookup based on cinfo pointer in the future*/
+cinfo_context_t *context_list_head = NULL;
 
-cinfo_context cictxt;
-shjpeg_context_t *context = NULL;
-buffer_cache_context_t cache_con = { 0 };
+cinfo_context_t *get_cinfo_context(j_common_ptr cinfo) {
+	/* first check if we have a matching pointer */
+	cinfo_context_t *ctx = context_list_head;
+	while (ctx) {
+		if (ctx->cinfo == cinfo)
+			return ctx;
+		ctx = ctx->next;
+	}
+	return NULL;
+}
+
+cinfo_context_t *create_cinfo_context(j_common_ptr cinfo) {
+	cinfo_context_t *ctx;
+	if ((ctx = get_cinfo_context(cinfo)))
+		return ctx;
+	ctx = malloc (sizeof (*ctx));
+	memset(ctx, 0, sizeof (*ctx));
+	ctx->cinfo = cinfo;
+	ctx->context = NULL;
+	ctx->next = context_list_head;
+	ctx->prev = NULL;
+	if (ctx->next)
+		ctx->next->prev = ctx;
+	context_list_head = ctx;
+	return ctx;
+}
+
+void free_cinfo_context(cinfo_context_t *ctx) {
+	if (ctx->prev) {
+		ctx->prev->next = ctx->next;
+	} else {
+		context_list_head = ctx->next;
+	}
+	if (ctx->next)
+		ctx->next->prev = ctx->prev;
+
+	free(ctx);
+}
 
 shjpeg_sops jpeg_src_ops = {
 	.init = jpeg_src_init,
@@ -110,33 +145,40 @@ shjpeg_CreateDecompress(j_decompress_ptr cinfo, int version,
 			 version);
 	}
 	libjpeg_hooks.jpeg_CreateDecompress(cinfo, version, structsize);
+	create_cinfo_context((j_common_ptr) cinfo);
 }
 
 int shjpeg_read_header(j_decompress_ptr cinfo, boolean require_image)
 {
 	int ret;
+	cinfo_context_t *ctx = get_cinfo_context((j_common_ptr) cinfo);
 
-	cictxt.cache_con = &cache_con;
-	cictxt.cinfo = (j_common_ptr) cinfo;
+	if (!ctx)
+		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
 
-	cache_con.fill_buffer_function = cinfo->src->fill_input_buffer;
+	ctx->cache_con.fill_buffer_function = cinfo->src->fill_input_buffer;
 	cinfo->src->fill_input_buffer = cache_input_buffer;
 
-	cache_con.total_buffer_size = 0;
-	cache_con.last_buffer_size = cinfo->src->bytes_in_buffer;
-	cache_con.current_start = cache_con.current_read =
+	ctx->cache_con.total_buffer_size = 0;
+	ctx->cache_con.last_buffer_size = cinfo->src->bytes_in_buffer;
+	ctx->cache_con.current_start = ctx->cache_con.current_read =
 	    (void *) cinfo->src->next_input_byte;
 
 	ret = libjpeg_hooks.jpeg_read_header(cinfo, require_image);
-	cinfo->src->fill_input_buffer = cache_con.fill_buffer_function;
-	jpeg_src_ops.read = jpeg_src_read_header;
+	cinfo->src->fill_input_buffer = ctx->cache_con.fill_buffer_function;
+	memcpy(&ctx->sops, &jpeg_src_ops, sizeof(jpeg_src_ops));
+	ctx->sops.read = jpeg_src_read_header;
 	return ret;
 }
 
 boolean shjpeg_start_decompress(j_decompress_ptr cinfo)
 {
 	shjpeg_pixelformat format;
-	if (context && context->active_object)
+	cinfo_context_t *ctx = get_cinfo_context((j_common_ptr) cinfo);
+	shjpeg_context_t *context = NULL;
+	shjpeg_internal_t *data;
+
+	if (!ctx)
 		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
 
 	if (!is_jpu_supported_decompress(cinfo)) {
@@ -150,7 +192,8 @@ boolean shjpeg_start_decompress(j_decompress_ptr cinfo)
 	   part of the shjpeg_decode_init */
 
 	CALL_API_FUNC(jpeg_calc_output_dimensions, cinfo)
-	context = shjpeg_init(1);
+	ctx->context = shjpeg_init(1);
+	context = ctx->context;
 	if (!context) {
 		TRACEMS(cinfo, 1, SHJMSG_LIBJPEG_MODE);
 		return libjpeg_hooks.jpeg_start_decompress(cinfo);
@@ -159,15 +202,20 @@ boolean shjpeg_start_decompress(j_decompress_ptr cinfo)
 	context->height = cinfo->output_height;
 	context->pitch = context->width * cinfo->out_color_components;
 	context->pitch = (context->pitch + 7) & ~7;	// 8 byte align
+	data = context->internal_data;
 
-	shjpeg_get_frame_buffer(context, &context->buffer.phys,
-				&context->buffer.buffer,
-				&context->buffer.size);
+	ctx->hardware_buf.bufsize = context->pitch * context->height;
+	ctx->hardware_buf.virt_addr = uiomux_malloc(data->uiomux, UIOMUX_JPU,
+		ctx->hardware_buf.bufsize, 1);
 
-	if (context->buffer.size < context->pitch * context->height) {
+	if (!ctx->hardware_buf.virt_addr) {
+		TRACEMS(cinfo, 1, SHJMSG_NO_MEMORY);
 		TRACEMS(cinfo, 1, SHJMSG_LIBJPEG_MODE);
 		return libjpeg_hooks.jpeg_start_decompress(cinfo);
 	}
+
+	ctx->hardware_buf.phys_addr = uiomux_virt_to_phys(data->uiomux,
+		UIOMUX_JPU, ctx->hardware_buf.virt_addr);
 
 	context->mode444 = 0;
 
@@ -183,23 +231,22 @@ boolean shjpeg_start_decompress(j_decompress_ptr cinfo)
 	     cinfo->comp_info[0].v_samp_factor / 2);
 
 	context->libjpeg_disabled = 1;
-	context->sops = &jpeg_src_ops;
+	if (!ctx->sops.init)
+		memcpy(&ctx->sops, &jpeg_src_ops, sizeof(jpeg_src_ops));
+	context->sops = &ctx->sops;
 
-	cictxt.cinfo = (j_common_ptr) cinfo;
-	cictxt.context = context;
-	context->priv_data = (void *) &cictxt;
+	context->priv_data = (void *) ctx;
 
 	format = get_shjpeg_pixelformat(cinfo->out_color_space);
 
 	if (shjpeg_decode_run(context, format,
-			      SHJPEG_USE_DEFAULT_BUFFER, context->width,
+			      ctx->hardware_buf.phys_addr, context->width,
 			      context->height, context->pitch) < 0) {
 		//this is not a recoverable failure... abort
 		shjpeg_decode_shutdown(context);
 		shjpeg_shutdown(context);
 		return libjpeg_hooks.jpeg_start_decompress(cinfo);
 	}
-	context->active_object = (j_common_ptr) cinfo;
 	active_hooks = &jpumode_hooks;
 	return TRUE;
 }
@@ -210,10 +257,15 @@ shjpeg_read_scanlines(j_decompress_ptr cinfo, JSAMPARRAY scanlines,
 {
 	int linecnt = 0;
 	void *buffer;
-	if ((j_common_ptr) cinfo != context->active_object) {
+	cinfo_context_t *ctx = get_cinfo_context((j_common_ptr) cinfo);
+	shjpeg_context_t *context = NULL;
+
+	if (!ctx)
 		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
-	}
-	buffer = context->buffer.buffer;
+
+	context = ctx->context;
+
+	buffer = ctx->hardware_buf.virt_addr;
 	max_lines = max_lines + cinfo->output_scanline > context->height ?
 	    context->height - cinfo->output_scanline : max_lines;
 	for (linecnt = 0; linecnt < max_lines; linecnt++) {
@@ -227,13 +279,22 @@ shjpeg_read_scanlines(j_decompress_ptr cinfo, JSAMPARRAY scanlines,
 
 boolean shjpeg_finish_decompress(j_decompress_ptr cinfo)
 {
-	if ((j_common_ptr) cinfo != context->active_object) {
+	cinfo_context_t *ctx = get_cinfo_context((j_common_ptr) cinfo);
+	shjpeg_context_t *context = NULL;
+	shjpeg_internal_t *data;
+
+	if (!ctx)
 		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
-	}
+
+	context = ctx->context;
+	data = context->internal_data;
+	uiomux_free(data->uiomux, UIOMUX_JPU, ctx->hardware_buf.virt_addr,
+		ctx->hardware_buf.bufsize);
+	memset(&ctx->hardware_buf, 0, sizeof (ctx->hardware_buf));
+
 	if (context->sops->finalize) {
 		context->sops->finalize(context->priv_data);
 	}
-	context->active_object = NULL;
 	active_hooks = &withjpu_hooks;
 	CALL_API_FUNC(jpeg_abort_decompress, cinfo)
 	return TRUE;
@@ -254,6 +315,7 @@ shjpeg_CreateCompress(j_compress_ptr cinfo, int version, size_t structsize)
 			 version);
 	}
 	libjpeg_hooks.jpeg_CreateCompress(cinfo, version, structsize);
+	create_cinfo_context((j_common_ptr) cinfo);
 }
 
 static boolean is_jpu_supported_compress(j_compress_ptr cinfo, boolean wat)
@@ -272,8 +334,13 @@ static boolean is_jpu_supported_compress(j_compress_ptr cinfo, boolean wat)
 
 void shjpeg_start_compress(j_compress_ptr cinfo, boolean write_all_tables)
 {
-	if (context && context->active_object)
+	cinfo_context_t *ctx = get_cinfo_context((j_common_ptr) cinfo);
+	shjpeg_context_t *context = NULL;
+	shjpeg_internal_t *data;
+
+	if (!ctx)
 		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
+
 
 	if (!is_jpu_supported_compress(cinfo, write_all_tables)) {
 		TRACEMS(cinfo, 1, SHJMSG_LIBJPEG_MODE);
@@ -281,7 +348,8 @@ void shjpeg_start_compress(j_compress_ptr cinfo, boolean write_all_tables)
 		return;
 	}
 	TRACEMS(cinfo, 1, SHJMSG_JPU_MODE);
-	context = shjpeg_init(0);
+	ctx->context = shjpeg_init(1);
+	context = ctx->context;
 	if (!context) {
 		TRACEMS(cinfo, 1, SHJMSG_LIBJPEG_MODE);
 		libjpeg_hooks.jpeg_start_compress(cinfo, write_all_tables);
@@ -291,25 +359,28 @@ void shjpeg_start_compress(j_compress_ptr cinfo, boolean write_all_tables)
 	context->height = cinfo->image_height;
 	context->pitch = context->width * cinfo->input_components;
 	context->pitch = (context->pitch + 7) & ~7;	// 8 byte align
+	data = context->internal_data;
 
-	shjpeg_get_frame_buffer(context, &context->buffer.phys,
-				&context->buffer.buffer,
-				&context->buffer.size);
-	if (context->buffer.size < context->pitch * context->height) {
+	ctx->hardware_buf.bufsize = context->pitch * context->height;
+	ctx->hardware_buf.virt_addr = uiomux_malloc(data->uiomux, UIOMUX_JPU,
+		ctx->hardware_buf.bufsize, 1);
+
+	if (!ctx->hardware_buf.virt_addr) {
+		TRACEMS(cinfo, 1, SHJMSG_NO_MEMORY);
 		TRACEMS(cinfo, 1, SHJMSG_LIBJPEG_MODE);
 		libjpeg_hooks.jpeg_start_compress(cinfo, write_all_tables);
 		return;
 	}
+	ctx->hardware_buf.phys_addr = uiomux_virt_to_phys(data->uiomux,
+		UIOMUX_JPU, ctx->hardware_buf.virt_addr);
 
 	context->libjpeg_disabled = 1;
 
-	context->sops = &jpeg_dest_ops;
-	cictxt.cinfo = (j_common_ptr) cinfo;
-	cictxt.context = context;
+	memcpy(&ctx->sops, &jpeg_dest_ops, sizeof(jpeg_dest_ops));
+	context->sops = &ctx->sops;
 
-	context->priv_data = (void *) &cictxt;
+	context->priv_data = (void *) ctx;
 
-	context->active_object = (j_common_ptr) cinfo;
 	active_hooks = &jpumode_hooks;
 }
 
@@ -319,10 +390,15 @@ shjpeg_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines,
 {
 	int linecnt = 0;
 	void *buffer;
-	if ((j_common_ptr) cinfo != context->active_object) {
+	cinfo_context_t *ctx = get_cinfo_context((j_common_ptr) cinfo);
+	shjpeg_context_t *context = NULL;
+
+	if (!ctx)
 		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
-	}
-	buffer = context->buffer.buffer;
+
+	context = ctx->context;
+
+	buffer = ctx->hardware_buf.virt_addr;
 	num_lines = num_lines + cinfo->next_scanline > context->height ?
 	    context->height - cinfo->next_scanline : num_lines;
 	for (linecnt = 0; linecnt < num_lines; linecnt++) {
@@ -337,15 +413,23 @@ shjpeg_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines,
 void shjpeg_finish_compress(j_compress_ptr cinfo)
 {
 	shjpeg_pixelformat format;
-	format = get_shjpeg_pixelformat(cinfo->in_color_space);
-	if ((j_common_ptr) cinfo != context->active_object) {
+	cinfo_context_t *ctx = get_cinfo_context((j_common_ptr) cinfo);
+	shjpeg_context_t *context = NULL;
+	shjpeg_internal_t *data;
+
+	if (!ctx)
 		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
-	}
+
+	context = ctx->context;
+	format = get_shjpeg_pixelformat(cinfo->in_color_space);
 	if (shjpeg_encode(context, format,
-			  SHJPEG_USE_DEFAULT_BUFFER, context->width,
+			  ctx->hardware_buf.phys_addr, context->width,
 			  context->height, context->pitch) < 0) {
 		ERREXIT(cinfo, SHJMSG_COMPRESS_ERR);
 	}
+	data = context->internal_data;
+	uiomux_free(data->uiomux, UIOMUX_JPU, ctx->hardware_buf.virt_addr,
+		ctx->hardware_buf.bufsize);
 	if (context->sops->finalize) {
 		context->sops->finalize(context->priv_data);
 	}
@@ -384,13 +468,23 @@ struct jpeg_error_mgr *shjpeg_std_error(struct jpeg_error_mgr *err)
   any time, so we cannot make assumptions about the current state*/
 void shjpeg_abort(j_common_ptr cinfo)
 {
-	if (context && context->active_object
-	    && context->active_object == cinfo) {
+	cinfo_context_t *ctx = get_cinfo_context((j_common_ptr) cinfo);
+	shjpeg_context_t *context = NULL;
+
+	if (ctx) {
+		context = ctx->context;
 		if (cinfo->is_decompressor) {
 			libjpeg_hooks.jpeg_abort_decompress(&context->
 							    jpeg_decomp);
 		}
-		context->active_object = NULL;
+		if (ctx->hardware_buf.bufsize) {
+			shjpeg_internal_t *data = context->internal_data;
+			uiomux_free(data->uiomux, UIOMUX_JPU,
+				ctx->hardware_buf.virt_addr,
+				ctx->hardware_buf.bufsize);
+			memset(&ctx->hardware_buf, 0,
+					sizeof (ctx->hardware_buf));
+		}
 		active_hooks = &withjpu_hooks;
 	}
 	libjpeg_hooks.jpeg_abort(cinfo);
@@ -398,10 +492,24 @@ void shjpeg_abort(j_common_ptr cinfo)
 
 void shjpeg_destroy(j_common_ptr cinfo)
 {
-	if (context && context->active_object
-	    && context->active_object == cinfo) {
+	cinfo_context_t *ctx = get_cinfo_context(cinfo);
+	shjpeg_context_t *context = NULL;
+
+	if (ctx) {
+		context = ctx->context;
+		free_cinfo_context(ctx);
+	}
+	if (context) {
 		if (cinfo->is_decompressor) {
 			shjpeg_decode_shutdown(context);
+		}
+		if (ctx->hardware_buf.bufsize) {
+			shjpeg_internal_t *data = context->internal_data;
+			uiomux_free(data->uiomux, UIOMUX_JPU,
+				ctx->hardware_buf.virt_addr,
+				ctx->hardware_buf.bufsize);
+			memset(&ctx->hardware_buf, 0,
+					sizeof (ctx->hardware_buf));
 		}
 		shjpeg_shutdown(context);
 		active_hooks = &withjpu_hooks;

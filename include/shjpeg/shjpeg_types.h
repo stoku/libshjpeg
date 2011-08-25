@@ -27,9 +27,6 @@
 #ifdef HAVE_STDLIB_H   
 #  undef HAVE_STDLIB_H //conflicts when using libjpeg version 6x
 #endif
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 /**
  * \file shjpeg_types.h
  *
@@ -217,13 +214,6 @@ struct shjpeg_context_struct {
     int         pitch;
     //! the working buffer for JPEG encode/decode
     struct shjpeg_buffer buffer;
-
-#ifdef LIBJPEG_WRAPPER_SUPPORT
-   /*! private data -
-        currently active compression object*/
-    j_common_ptr active_object;
-
-#endif
 };
 
 #endif /* !__shjpeg_types_h__ */

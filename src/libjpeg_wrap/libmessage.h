@@ -52,10 +52,11 @@ JMESSAGE(SHJMSG_BAD_VERSION,
        "but caller expects %d.\n"
 	"Application, wrapper, and library versions must all match.")
 JMESSAGE(SHJMSG_INVALID_CONTEXT,
-	"Parallel processing of multiple images not supported.")
+	"Invalid context object.")
 JMESSAGE(SHJMSG_COMPRESS_ERR, "JPEG compression error in JPU")
 JMESSAGE(SHJMSG_JPU_MODE, "Processing in JPU mode")
 JMESSAGE(SHJMSG_LIBJPEG_MODE, "Processing in libjpeg mode")
+JMESSAGE(SHJMSG_NO_MEMORY, "Out of UIO memory, switching to S/W mode.")
 #ifdef JMAKE_ENUM_LIST
 
   SHJMSG_LASTMSGCODE

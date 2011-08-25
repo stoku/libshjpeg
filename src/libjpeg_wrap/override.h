@@ -30,10 +30,26 @@ typedef struct {
 } buffer_cache_context_t;
 
 typedef struct {
-	j_common_ptr cinfo;
-	shjpeg_context_t *context;
-	buffer_cache_context_t *cache_con;
-} cinfo_context;
+	unsigned long phys_addr;
+	void *virt_addr;
+	int bufsize;
+} hardware_buffer_t;
+
+typedef struct cinfo_context_type {
+	j_common_ptr 		cinfo;
+	shjpeg_context_t 	*context;
+	buffer_cache_context_t 	cache_con;
+	hardware_buffer_t 	hardware_buf;
+	shjpeg_sops		sops;
+	struct cinfo_context_type *next;
+	struct cinfo_context_type *prev;
+} cinfo_context_t;
+
+/* Access context
+   --------------
+   Returns the internal context structure associated with
+   a cinfo object */
+cinfo_context_t *get_cinfo_context(j_common_ptr cinfo);
 
 /*With libjpeg functions
   ------------------
