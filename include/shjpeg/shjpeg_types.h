@@ -161,7 +161,7 @@ typedef struct shjpeg_context_struct shjpeg_context_t;
  */
 
 /**
- * \brief JPU data buffer information
+ * \brief JPU data buffer information (deprecated)
  *
  * This structure stores the physical and virtual address
  * of the buffer that is used for JPEG encode/decode on the
@@ -212,7 +212,7 @@ struct shjpeg_context_struct {
 //New for 1.3
     //! Pitch of the current image.
     int         pitch;
-    //! the working buffer for JPEG encode/decode
+    //! the working buffer for JPEG encode/decode (deprecated)
     struct shjpeg_buffer buffer;
 };
 
