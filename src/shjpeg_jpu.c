@@ -114,6 +114,7 @@ process_jpu_ints(int ints, shjpeg_context_t *context,
 		data->jpeg_end = 1;
 		D_INFO("libshjpeg: xfer done");
 		*done = 1;
+		ints |= JPU_JINTS_INS12_LINEBUF1;
 	}
 
 	/* Line buffer processing complete */
