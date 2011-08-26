@@ -41,6 +41,7 @@ typedef struct cinfo_context_type {
 	buffer_cache_context_t 	cache_con;
 	hardware_buffer_t 	hardware_buf;
 	shjpeg_sops		sops;
+	int			jpumode;
 	struct cinfo_context_type *next;
 	struct cinfo_context_type *prev;
 } cinfo_context_t;

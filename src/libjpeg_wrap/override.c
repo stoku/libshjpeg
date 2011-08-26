@@ -24,7 +24,7 @@
 #include "shjpeg/shjpeg.h"
 #include "shjpeg/shjpeg_types.h"
 
-extern hooks_t libjpeg_hooks, *active_hooks, withjpu_hooks, jpumode_hooks;
+extern hooks_t libjpeg_hooks, *active_hooks;
 
 cinfo_context_t *context_list_head = NULL;
 
@@ -246,7 +246,7 @@ boolean shjpeg_start_decompress(j_decompress_ptr cinfo)
 		shjpeg_shutdown(context);
 		return libjpeg_hooks.jpeg_start_decompress(cinfo);
 	}
-	active_hooks = &jpumode_hooks;
+	ctx->jpumode = 1;
 	return TRUE;
 }
 
@@ -261,6 +261,10 @@ shjpeg_read_scanlines(j_decompress_ptr cinfo, JSAMPARRAY scanlines,
 
 	if (!ctx)
 		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
+
+	if (!ctx->jpumode)
+		return libjpeg_hooks.jpeg_read_scanlines(cinfo,
+				scanlines, max_lines);
 
 	context = ctx->context;
 
@@ -285,6 +289,9 @@ boolean shjpeg_finish_decompress(j_decompress_ptr cinfo)
 	if (!ctx)
 		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
 
+	if (!ctx->jpumode)
+		return libjpeg_hooks.jpeg_finish_decompress(cinfo);
+
 	context = ctx->context;
 	data = context->internal_data;
 	uiomux_free(data->uiomux, UIOMUX_JPU, ctx->hardware_buf.virt_addr,
@@ -294,7 +301,7 @@ boolean shjpeg_finish_decompress(j_decompress_ptr cinfo)
 	if (context->sops->finalize) {
 		context->sops->finalize(context->priv_data);
 	}
-	active_hooks = &withjpu_hooks;
+	ctx->jpumode = 0;
 	CALL_API_FUNC(jpeg_abort_decompress, cinfo)
 	return TRUE;
 }
@@ -380,7 +387,7 @@ void shjpeg_start_compress(j_compress_ptr cinfo, boolean write_all_tables)
 
 	context->priv_data = (void *) ctx;
 
-	active_hooks = &jpumode_hooks;
+	ctx->jpumode = 1;
 }
 
 JDIMENSION
@@ -395,6 +402,9 @@ shjpeg_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines,
 	if (!ctx)
 		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
 
+	if (!ctx->jpumode)
+		return libjpeg_hooks.jpeg_write_scanlines(cinfo,
+				scanlines, num_lines);
 	context = ctx->context;
 
 	buffer = ctx->hardware_buf.virt_addr;
@@ -419,6 +429,9 @@ void shjpeg_finish_compress(j_compress_ptr cinfo)
 	if (!ctx)
 		ERREXIT(cinfo, SHJMSG_INVALID_CONTEXT);
 
+	if (!ctx->jpumode)
+		return libjpeg_hooks.jpeg_finish_compress(cinfo);
+
 	context = ctx->context;
 	format = get_shjpeg_pixelformat(cinfo->in_color_space);
 	if (shjpeg_encode(context, format,
@@ -432,7 +445,7 @@ void shjpeg_finish_compress(j_compress_ptr cinfo)
 	if (context->sops->finalize) {
 		context->sops->finalize(context->priv_data);
 	}
-	active_hooks = &withjpu_hooks;
+	ctx->jpumode = 0;
 }
 
 /*redefine the error message table as a concatenation of the standard
@@ -484,7 +497,6 @@ void shjpeg_abort(j_common_ptr cinfo)
 			memset(&ctx->hardware_buf, 0,
 					sizeof (ctx->hardware_buf));
 		}
-		active_hooks = &withjpu_hooks;
 	}
 	libjpeg_hooks.jpeg_abort(cinfo);
 }
@@ -511,7 +523,6 @@ void shjpeg_destroy(j_common_ptr cinfo)
 					sizeof (ctx->hardware_buf));
 		}
 		shjpeg_shutdown(context);
-		active_hooks = &withjpu_hooks;
 		context = NULL;
 	}
 	libjpeg_hooks.jpeg_destroy(cinfo);
