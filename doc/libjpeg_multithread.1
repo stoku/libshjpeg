@@ -1,0 +1,34 @@
+.TH "libjpeg_multithread" 1 "Aug 2011" "SH JPEG" "Linux-SH Multimedia"
+
+.SH NAME
+libjpeg_multithread \- Encode/decode JPEG images using the SH-Mobile JPU through the libjpeg interface using mutliple threads.
+
+.SH SYNOPSIS
+
+.B \fBlibjpeg_multithread\fR \fI[OPTIONS]\fR \fI<jpegfile1>\fR \fI<jpegfile2>\fR
+
+.SH DESCRPITOIN
+Simultaneously decodes and encoded two different jpeg files and saves the
+output in <filename>.out.  The test creates two threads, and each thread
+decodedes and re-encodes the jpeg data.  This is a simple soak test
+designed to test running two coding operations in pararellel.
+
+The test duration (in iterations) can be set by using the -c/--count option.
+A value of -1 indicates infinite looping.
+
+The test can be considered to have passed if:
+.P
+1) The test ends (unless test duration is infinite)
+.P
+2) There are an equal number of iterations for both threads.
+.P
+3) The output files look like the input files.
+.SH OPTIONS
+For infomation on options run
+.B libjpeg_multithread 
+--help
+
+.SH AUTHORS
+libjpeg_multithread was written by Damian Hobson-Garcia
+
+Please report bugs to <dhobsong@igel.co.jp>
