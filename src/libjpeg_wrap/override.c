@@ -17,6 +17,7 @@
  */
 
 #include <string.h>
+#include <pthread.h>
 #include "shjpeg_internal.h"
 #include "jpeg_io.h"
 #include "override.h"
@@ -25,17 +26,22 @@
 #include "shjpeg/shjpeg_types.h"
 
 extern hooks_t libjpeg_hooks, *active_hooks;
+static pthread_mutex_t ctx_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 cinfo_context_t *context_list_head = NULL;
 
 cinfo_context_t *get_cinfo_context(j_common_ptr cinfo) {
+	pthread_mutex_lock(&ctx_mutex);
 	/* first check if we have a matching pointer */
 	cinfo_context_t *ctx = context_list_head;
 	while (ctx) {
-		if (ctx->cinfo == cinfo)
+		if (ctx->cinfo == cinfo) {
+			pthread_mutex_unlock(&ctx_mutex);
 			return ctx;
+		}
 		ctx = ctx->next;
 	}
+	pthread_mutex_unlock(&ctx_mutex);
 	return NULL;
 }
 
@@ -47,15 +53,18 @@ cinfo_context_t *create_cinfo_context(j_common_ptr cinfo) {
 	memset(ctx, 0, sizeof (*ctx));
 	ctx->cinfo = cinfo;
 	ctx->context = NULL;
-	ctx->next = context_list_head;
 	ctx->prev = NULL;
+	pthread_mutex_lock(&ctx_mutex);
+	ctx->next = context_list_head;
 	if (ctx->next)
 		ctx->next->prev = ctx;
 	context_list_head = ctx;
+	pthread_mutex_unlock(&ctx_mutex);
 	return ctx;
 }
 
 void free_cinfo_context(cinfo_context_t *ctx) {
+	pthread_mutex_lock(&ctx_mutex);
 	if (ctx->prev) {
 		ctx->prev->next = ctx->next;
 	} else {
@@ -65,6 +74,7 @@ void free_cinfo_context(cinfo_context_t *ctx) {
 		ctx->next->prev = ctx->prev;
 
 	free(ctx);
+	pthread_mutex_unlock(&ctx_mutex);
 }
 
 shjpeg_sops jpeg_src_ops = {
