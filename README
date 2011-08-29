@@ -4,8 +4,11 @@ cannot be decoded, automatically falls back to libjpeg.
 
 Run 'autoreconf -vif' to create 'configure'.
 
-Then, run ./configure. You must have libjpeg in order to compile
-properly.
+Then, run ./configure. You must have libjpeg, libuiomux, and libshveu,
+in order to compile properly.
+
+libuiomux can be found at: https://github.com/pedwo/libuiomux
+libshveu can be found at: https://github.com/pedwo/libshveu
 
 You can find 4 sample codes in ./tests/ directory. Possible options
 on these sample codes can be found by giving '--help' as a command
@@ -20,5 +23,10 @@ mjpeg2jpeg.pl - Retrieve v2mjpeg/sighttpd output via http, and stores as
 		individual JPEG files.
 
 libjpegtest   - Decode and then encode a JPEG file using the libjpeg interface.
+
+shjpegtest_multithread - Simultaneously encode and decode data from two threads
+
+libjpeg_multithread - Simultaneously decode and encode data from two threads
+		      using the libjpeg interface.
 
 See libshjpeg.txt for more details about the library
