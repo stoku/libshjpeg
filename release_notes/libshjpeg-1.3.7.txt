@@ -1,0 +1,68 @@
+libshjpeg Release 1.3.7
+=======================
+
+libshjpeg: A library for controlling the SH-Mobile JPU
+
+The source archive is available from
+
+	https://github.com/dhobsong/libshjpeg
+
+New in this release
+-------------------
+Thread safety
+  Multiple images can now be decoded/encoded in parallel from
+  different threads in the same process.  Both native and libjpeg
+  interfaces can be used
+     * new tests added: shjpeg_multithread, libjpeg_multithread to
+       test this functinality.
+
+Use libshveu for accessing the VEU
+  * color conversion is now performed via libshveu.  The libshveu
+    library is now necessary to compile this project.
+    Source for libshveu can be found at:
+        https://github.com/pedwo/libshveu
+
+Use UIOMux for memory allocation and resource locking
+  * The UIOMux library is now necessary to compile this project
+    Source for UIOMUx can be found at:
+        https://github.com/pedwo/libuiomux
+
+Minor documentation clarifications
+
+Changes
+-------
+Damian Hobson-Garcia (22):
+      Merge pull request #4 from pedwo/master
+      documentation: Correct errors in explanation of shjpeg_decode()/shjpeg_encode()
+      shjpegshow: Fix up some compile warnings
+      Makefile.am: Only add include path when using a custom libjpeg library
+      shjpegtest: Fix -p/--phys parsing and help message
+      Add UIOMux support
+      Update reset sequence
+      shjpeg_multithread: Add multithreaded JPEG encode/decode test
+      tests/Makefile.am: Add $(SHVEU_LIBS) to all dependencies
+      Move buffer_cache_context_t out of public context data structure
+      Free uiomux_allocated memory on shutdown.
+      libjpeg wrapper: Allow for multiple context to be used simultaneously
+      libjpeg wrapper: Properly classify grayscale images as "unsupported"
+      Deprecate the shjpeg_buffer structure and its usage in the context
+      libjpeg wrapper: Don't switch hook pointers when using JPU mode
+      Process last line buffer on decode when image height is not a mutliple of 16
+      libjpeg wrapper: Add mutex for global context list accesses
+      tests: Add a multithreaded libjpeg test
+      Documentation: Add man page for shjpeg_multithread
+      Documentation: Add doxygen comments for deprecated shjpeg_buffer structure
+      Update AUTHORS information
+      Documentation: Update README file
+
+Phil Edworthy (10):
+      Move JPU & VEU interrupt handling into functions
+      Move the code to start the VEU into a function
+      Move sw convert code into function
+      tests: Add an option to allow sw color space conversion
+      Fix JPU control loop when using sw color space conversion
+      Mainly cosmetic changes.
+      Move code into a start_jpu function & minor tidy up
+      tests: add ability to decode other formats
+      Rework JPU loop to split JPU & VEU wait for events
+      Replace direct access to VEU with calls to libshveu library
