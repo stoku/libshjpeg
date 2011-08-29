@@ -1,0 +1,31 @@
+.TH "shjpeg_multithread" 1 "Aug 2011" "SH JPEG" "Linux-SH Multimedia"
+
+.SH NAME
+shjpeg_multithread \- Encode/decode JPEG images using the SH-Mobile JPU through the libjpeg interface using mutliple threads.
+
+.SH SYNOPSIS
+
+.B \fBshjpeg_multithread\fR \fI[OPTIONS]\fR
+
+.SH DESCRPITOIN
+Simultaneously decodes and encoded two different jpeg files and outputs the
+result to the default framebuffer /dev/fb0.
+The test creates two threads, and each thread encodes a pattern as a jpeg,
+decodes it, and outputs it to the screen.  The patters should form scrolling
+bands of color.  This is a simple soak test designed to test running two
+coding operations in pararellel.
+
+The test duration (in iterations) can be set by using the -c/--count option.
+A value of -1 indicates infinite looping.
+
+The test can be considered to have passed if the scrolling bands continue to
+be generated and displayed (unless limited by the -c option) 
+
+.SH OPTIONS
+.IP -c/--count
+The number of frames to iterate.  -1 = infinite	(default)
+
+.SH AUTHORS
+shjpeg_multithread was written by Damian Hobson-Garcia
+
+Please report bugs to <dhobsong@igel.co.jp>

@@ -1,7 +1,7 @@
 docdir=$(prefix)/share/doc/@PACKAGE@
 
 man_MANS = shjpegshow.1 shjpegtest.1 v2mjpeg.1 libjpegtest.1 \
-	   libjpeg_multithread.1
+	   libjpeg_multithread.1 shjpeg_multithread.1
 
 EXTRA_DIST = $(man_MANS) Doxyfile.in
 
