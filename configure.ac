@@ -38,7 +38,6 @@ AM_CONDITIONAL(CUSTOM_JPEG_LIB, test x$libjpeg_inc_path != x)
 
 PKG_CHECK_MODULES(DIRECTFB, directfb >= 1.4.0, HAVE_DIRECTFB=yes, HAVE_DIRECTFB=no)
 PKG_CHECK_MODULES(UIOMUX, uiomux >= 1.6.0)
-PKG_CHECK_MODULES(SHVEU, shveu >= 1.7.0)
 
 AM_CONDITIONAL(MAKE_DIRECTFB_TEST, test x$HAVE_DIRECTFB = xyes)
 
@@ -86,6 +85,19 @@ AC_TYPE_UINT8_T
 #AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_CHECK_FUNCS([getpagesize memset munmap strerror])
+
+# Checks for a color space conversion library
+ac_enable_veu=yes
+AC_ARG_ENABLE(veu,
+	[  --disable-veu           disable color space conversion by VEU ],
+	[ ac_enable_veu=no ], [ ac_enable_veu=yes] )
+if test "x${ac_enable_veu}" = xyes ; then
+	PKG_CHECK_MODULES(SHVEU, shveu >= 1.7.0, HAVE_SHVEU=yes, HAVE_SHVEU=no)
+	if test "x$HAVE_SHVEU" = "xyes" ; then
+		AC_DEFINE(HAVE_SHVEU, [1], [Define to 1 if you have SHVEU])
+	fi
+fi
+AM_CONDITIONAL(HAVE_SHVEU, [test "x$HAVE_SHVEU" = "xyes"])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile

@@ -33,7 +33,9 @@
 #include <shjpeg/shjpeg.h>
 #include "shjpeg_internal.h"
 #include "shjpeg_jpu.h"
+#if defined(HAVE_SHVEU)
 #include "shjpeg_veu.h"
+#endif
 #include "shjpeg_softhelper.h"
 
 static inline int coded_data_amount(shjpeg_internal_t * data)
@@ -54,11 +56,14 @@ encode_hw(shjpeg_internal_t * data,
 	int written = 0;
 	bool mode420 = false;
 	shjpeg_jpu_t jpeg;
-	shjpeg_veu_t veu;
 	vmap_data_t mdata;
+#if defined(HAVE_SHVEU)
+	shjpeg_veu_t veu;
+#endif
 
-	memset((void*)&veu, 0, sizeof(shjpeg_veu_t));
 	memset(&mdata, 0, sizeof(mdata));
+#if defined(HAVE_SHVEU)
+	memset((void*)&veu, 0, sizeof(shjpeg_veu_t));
 
 	D_DEBUG_AT(SH7722_JPEG, "( %p, 0x%08lx|%d [%dx%d])",
 		   data, phys, pitch, width, height);
@@ -100,6 +105,7 @@ encode_hw(shjpeg_internal_t * data,
 		D_BUG("unexpected format %d", format);
 		return -1;
 	}
+#endif /* defined(HAVE_SHVEU) */
 
 	D_DEBUG_AT(SH7722_JPEG, "	 -> locking JPU...");
 
@@ -201,7 +207,10 @@ encode_hw(shjpeg_internal_t * data,
 					&mdata, format, phys) < 0) {
 				return -1;
 			}
-		} else {
+
+		}
+#if defined(HAVE_SHVEU)
+		else {
 			jpeg.flags |= SHJPEG_JPU_FLAG_CONVERT;
 			/* Setup VEU for conversion/scaling
 			(from surface to line buffer). */
@@ -227,6 +236,7 @@ encode_hw(shjpeg_internal_t * data,
 			/* Set the correct physical addresses */
 			shveu_set_src_phys(data->veu, jpeg.sa_y, jpeg.sa_c);
 		}
+#endif /* defined(HAVE_SHVEU) */
 	}
 
 	/* init QT/HT */

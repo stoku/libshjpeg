@@ -17,7 +17,6 @@ libshjpeg_la_LDFLAGS = -version-info $(LIBSHJPEG_VERSION_INFO)
 libshjpeg_la_SOURCES = \
 	shjpeg_common.c \
 	shjpeg_config.c \
-	shjpeg_veu.c \
 	shjpeg_jpu.c \
 	shjpeg_decode.c \
 	shjpeg_encode.c \
@@ -28,6 +27,11 @@ libshjpeg_la_SOURCES = \
 	shjpeg_regs.h \
 	shjpeg_veu.h \
 	shjpeg_jpu.h
+
+if HAVE_SHVEU
+libshjpeg_la_SOURCES += \
+	shjpeg_veu.c
+endif
 
 if MAKE_JPEG_WRAPPER
 libshjpeg_la_SOURCES += \

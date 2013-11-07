@@ -51,7 +51,9 @@ static void uio_shutdown(shjpeg_internal_t * data)
 		SHJPEG_JPU_LINEBUFFER_SIZE);
 	uiomux_free(data->uiomux, UIOMUX_JPU, data->jpeg_lb2_virt,
 		SHJPEG_JPU_LINEBUFFER_SIZE);
+#if defined(HAVE_SHVEU)
 	shveu_close(data->veu);
+#endif
 	uiomux_close(data->uiomux);
 
 	/* deinit */
@@ -72,11 +74,13 @@ static int uio_init(shjpeg_context_t * context, shjpeg_internal_t * data)
 	D_DEBUG_AT(SH7722_JPEG, "( %p )", data);
 
 
+#if defined(HAVE_SHVEU)
 	/* Open VEU */
 	if ((data->veu = shveu_open()) == 0) {
 		D_ERROR("libshjpeg: Cannot open VEU!");
 		return -1;
 	}
+#endif
 
 	/* Open JPU */
 	data->uiomux = uiomux_open_named(uio_device_names);

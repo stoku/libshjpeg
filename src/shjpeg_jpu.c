@@ -54,7 +54,9 @@
 #include "shjpeg_internal.h"
 #include "shjpeg_regs.h"
 #include "shjpeg_jpu.h"
+#if defined(HAVE_SHVEU)
 #include "shjpeg_veu.h"
+#endif
 #include "shjpeg_softhelper.h"
 
 /*
@@ -191,6 +193,7 @@ wait_and_process_jpu(shjpeg_context_t * context,
 	return 0;
 }
 
+#if defined(HAVE_SHVEU)
 static void
 start_veu(shjpeg_context_t * context,
 	shjpeg_internal_t * data, shjpeg_jpu_t * jpeg)
@@ -226,6 +229,7 @@ wait_and_process_veu(shjpeg_context_t * context,
 
 	return 0;
 }
+#endif /* defined(HAVE_SHVEU) */
 
 /* Colorspace conversion in software */
 static void
@@ -263,13 +267,16 @@ shjpeg_convert(shjpeg_context_t * context,
 		shjpeg_internal_t * data, shjpeg_jpu_t * jpeg)
 {
 	int ret = 0;
-	int hw_convert = (jpeg->flags & SHJPEG_JPU_FLAG_CONVERT);
 	int sw_convert = (jpeg->flags & SHJPEG_JPU_FLAG_SOFTCONVERT);
+#if defined(HAVE_SHVEU)
+	int hw_convert = (jpeg->flags & SHJPEG_JPU_FLAG_CONVERT);
 
 	if (hw_convert) {
 		start_veu(context, data, jpeg);
 		ret = wait_and_process_veu(context, data);
-	} else if (sw_convert) {
+	} else
+#endif /* defined(HAVE_SHVEU) */
+	if (sw_convert) {
 		shjpeg_sw_convert(context, data, jpeg);
 	} else {
 		data->veu_line_bufs_done++;

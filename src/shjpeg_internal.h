@@ -19,7 +19,10 @@
 #ifndef __shjpeg_internal_h__
 #define __shjpeg_internal_h__
 
+#include <pthread.h>
+#if defined(HAVE_SHVEU)
 #include <shveu/shveu.h>
+#endif
 #include <shjpeg/shjpeg_types.h>
 #include "shjpeg_utils.h"
 #include <uiomux/uiomux.h>
@@ -57,7 +60,9 @@ typedef struct {
 	volatile void *jpu_base;	// virt addr to JPU regs
 	unsigned long jpu_size;	// size of JPU reg range
 
+#if defined(HAVE_SHVEU)
 	SHVEU *veu;
+#endif
 
 	/* internal to state machine */
 	uint32_t jpeg_buffers;

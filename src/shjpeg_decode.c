@@ -36,7 +36,9 @@
 #include <shjpeg/shjpeg.h>
 #include "shjpeg_internal.h"
 #include "shjpeg_jpu.h"
+#if defined(HAVE_SHVEU)
 #include "shjpeg_veu.h"
+#endif
 #include "shjpeg_softhelper.h"
 
 /*
@@ -53,12 +55,15 @@ decode_hw(shjpeg_internal_t * data,
 	unsigned int len;
 	bool reload = false;
 	shjpeg_jpu_t jpeg;
+#if defined(HAVE_SHVEU)
 	shjpeg_veu_t veu;
+#endif
 	vmap_data_t mdata;
 	D_ASSERT(data != NULL);
 
-	memset((void*)&veu, 0, sizeof(shjpeg_veu_t));
 	memset(&mdata, 0, sizeof(mdata));
+#if defined(HAVE_SHVEU)
+	memset((void*)&veu, 0, sizeof(shjpeg_veu_t));
 
 	D_DEBUG_AT(SH7722_JPEG, "%s( %p, 0x%08lx|%d [%dx%d] %08x )",
 		   __FUNCTION__, data, phys, pitch,
@@ -97,6 +102,13 @@ decode_hw(shjpeg_internal_t * data,
 		D_BUG("unexpected format %08x", format);
 		return -1;
 	}
+#else
+	if ((context->mode420 && format != SHJPEG_PF_NV12) ||
+	    (!context->mode420 && format != SHJPEG_PF_NV16)) {
+		D_PERROR("libshjpeg: unexpected format %08x", format);
+		return -1;
+	}
+#endif /* defined(HAVE_SHVEU) */
 
 	D_DEBUG_AT(SH7722_JPEG, "		 -> locking JPU...");
 
@@ -197,7 +209,6 @@ decode_hw(shjpeg_internal_t * data,
 		shjpeg_jpu_setreg32(data, JPU_JIFDDMW,
 				    SHJPEG_JPU_LINEBUFFER_PITCH);
 
-	/* Setup VEU for conversion/scaling (from line buffer to surface). */
 		if (format == SHJPEG_PF_YCbCr) {
 			jpeg.flags |= SHJPEG_JPU_FLAG_SOFTCONVERT;
 			jpeg.soft_offset = jpeg.soft_line = 0;
@@ -207,7 +218,10 @@ decode_hw(shjpeg_internal_t * data,
 				D_ERROR("Get vframe buff err\n");
 				goto end;
 			}
-		} else {
+		}
+#if defined(HAVE_SHVEU)
+		/* Setup VEU for conversion/scaling (from line buffer to surface). */
+		else {
 			jpeg.flags |= SHJPEG_JPU_FLAG_CONVERT;
 			/* Setup VEU for conversion/scaling
 				(from line buffer to surface). */
@@ -236,6 +250,7 @@ decode_hw(shjpeg_internal_t * data,
 			shveu_set_src_phys(data->veu, 0, 0);
 			shveu_set_dst_phys(data->veu, phys, phys + pitch * height);
 		}
+#endif /* defined(HAVE_SHVEU) */
 	}
 
 
@@ -296,7 +311,9 @@ decode_hw(shjpeg_internal_t * data,
 
 	free_frame_buffer_virtual(&mdata);
 
+#if defined(HAVE_SHVEU)
 end:
+#endif
 	/* Unlocking JPU using uiomux_unlock */
 	if (uiomux_unlock(data->uiomux, UIOMUX_JPU)) {
 		D_PERROR("libshjpeg: Could not unlock JPEG engine!");
