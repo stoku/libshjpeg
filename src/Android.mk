@@ -8,7 +8,7 @@ LOCAL_SRC_FILES:= \
 	shjpeg_encode.c \
 	shjpeg_softhelper.c \
 	shjpeg_jpu.c  \
-	shjpeg_veu.c
+	shjpeg_vio.c
 
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../include \

@@ -20,8 +20,8 @@
 #define __shjpeg_internal_h__
 
 #include <pthread.h>
-#if defined(HAVE_SHVEU)
-#include <shveu/shveu.h>
+#if defined(HAVE_SHVIO)
+#include <shvio/shvio.h>
 #endif
 #include <shjpeg/shjpeg_types.h>
 #include "shjpeg_utils.h"
@@ -60,8 +60,8 @@ typedef struct {
 	volatile void *jpu_base;	// virt addr to JPU regs
 	unsigned long jpu_size;	// size of JPU reg range
 
-#if defined(HAVE_SHVEU)
-	SHVEU *veu;
+#if defined(HAVE_SHVIO)
+	SHVIO *vio;
 #endif
 
 	/* internal to state machine */
@@ -75,8 +75,8 @@ typedef struct {
 	int jpu_line_bufs_pending;
 	int jpu_line_bufs_done;
 
-	int veu_linebuf;
-	int veu_line_bufs_done;
+	int vio_linebuf;
+	int vio_line_bufs_done;
 
 	/* internal data */
 	shjpeg_context_t *context;

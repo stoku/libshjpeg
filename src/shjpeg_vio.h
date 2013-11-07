@@ -16,23 +16,23 @@
  * MIT license: COPYING_MIT
  */
 
-#ifndef __shjpeg_veu_h__
-#define __shjpeg_veu_h__
+#ifndef __shjpeg_vio_h__
+#define __shjpeg_vio_h__
 
-#include <shveu/shveu.h>
+#include <shvio/shvio.h>
 #include "shjpeg_utils.h"
 
 typedef struct {
 	struct ren_vid_surface src;
 	struct ren_vid_surface dst;
-} shjpeg_veu_t;
+} shjpeg_vio_t;
 
 
 /* external function */
-int shjpeg_veu_init(shjpeg_internal_t * data, shjpeg_veu_t * veu);
-void shjpeg_veu_set_dst_jpu(shjpeg_internal_t *);
-void shjpeg_veu_set_src_jpu(shjpeg_internal_t *);
-void shjpeg_veu_set_src(shjpeg_internal_t *, u32, u32);
-void shjpeg_veu_start(shjpeg_internal_t *, int);
+int shjpeg_vio_init(shjpeg_internal_t * data, shjpeg_vio_t * vio);
+void shjpeg_vio_set_dst_jpu(shjpeg_internal_t *);
+void shjpeg_vio_set_src_jpu(shjpeg_internal_t *);
+void shjpeg_vio_set_src(shjpeg_internal_t *, u32, u32);
+void shjpeg_vio_start(shjpeg_internal_t *, int);
 
 #endif				/* !__shjpeg_jpu_h__ */

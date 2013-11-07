@@ -87,17 +87,17 @@ AC_FUNC_MMAP
 AC_CHECK_FUNCS([getpagesize memset munmap strerror])
 
 # Checks for a color space conversion library
-ac_enable_veu=yes
-AC_ARG_ENABLE(veu,
-	[  --disable-veu           disable color space conversion by VEU ],
-	[ ac_enable_veu=no ], [ ac_enable_veu=yes] )
-if test "x${ac_enable_veu}" = xyes ; then
-	PKG_CHECK_MODULES(SHVEU, shveu >= 1.7.0, HAVE_SHVEU=yes, HAVE_SHVEU=no)
-	if test "x$HAVE_SHVEU" = "xyes" ; then
-		AC_DEFINE(HAVE_SHVEU, [1], [Define to 1 if you have SHVEU])
+ac_enable_vio=yes
+AC_ARG_ENABLE(vio,
+	[  --disable-vio           disable color space conversion by VIO ],
+	[ ac_enable_vio=no ], [ ac_enable_vio=yes] )
+if test "x${ac_enable_vio}" = xyes ; then
+	PKG_CHECK_MODULES(SHVIO, shvio >= 1.7.0, HAVE_SHVIO=yes, HAVE_SHVIO=no)
+	if test "x$HAVE_SHVIO" = "xyes" ; then
+		AC_DEFINE(HAVE_SHVIO, [1], [Define to 1 if you have SHVIO])
 	fi
 fi
-AM_CONDITIONAL(HAVE_SHVEU, [test "x$HAVE_SHVEU" = "xyes"])
+AM_CONDITIONAL(HAVE_SHVIO, [test "x$HAVE_SHVIO" = "xyes"])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile

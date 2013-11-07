@@ -108,7 +108,7 @@ get_frame_buffer_virtual(shjpeg_internal_t * data,
 
 void soft_get_src_jpu(shjpeg_internal_t * data, void **ydata, void **cdata)
 {
-	if (!data->veu_linebuf) {
+	if (!data->vio_linebuf) {
 		*ydata = data->jpeg_lb1_virt;
 		*cdata =
 		    data->jpeg_lb1_virt + SHJPEG_JPU_LINEBUFFER_SIZE_Y;

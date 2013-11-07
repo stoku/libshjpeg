@@ -6,11 +6,11 @@ AM_CPPFLAGS = $(INCLTDL) -I$(top_srcdir)/include
 if CUSTOM_JPEG_LIB
 AM_CPPFLAGS +=	-I$(libjpeg_inc_path)
 endif
-AM_CFLAGS = -Wall -Werror $(UIOMUX_CFLAGS) $(SHVEU_CFLAGS)
+AM_CFLAGS = -Wall -Werror $(UIOMUX_CFLAGS) $(SHVIO_CFLAGS)
 
 lib_LTLIBRARIES = libshjpeg.la
 
-libshjpeg_la_LIBADD = $(LIBS) $(UIOMUX_LIBS) $(SHVEU_LIBS)
+libshjpeg_la_LIBADD = $(LIBS) $(UIOMUX_LIBS) $(SHVIO_LIBS)
 
 libshjpeg_la_LDFLAGS = -version-info $(LIBSHJPEG_VERSION_INFO)
 
@@ -25,12 +25,12 @@ libshjpeg_la_SOURCES = \
 	shjpeg_internal.h \
 	shjpeg_utils.h \
 	shjpeg_regs.h \
-	shjpeg_veu.h \
+	shjpeg_vio.h \
 	shjpeg_jpu.h
 
-if HAVE_SHVEU
+if HAVE_SHVIO
 libshjpeg_la_SOURCES += \
-	shjpeg_veu.c
+	shjpeg_vio.c
 endif
 
 if MAKE_JPEG_WRAPPER

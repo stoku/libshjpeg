@@ -33,8 +33,8 @@
 #include <shjpeg/shjpeg.h>
 #include "shjpeg_internal.h"
 #include "shjpeg_jpu.h"
-#if defined(HAVE_SHVEU)
-#include "shjpeg_veu.h"
+#if defined(HAVE_SHVIO)
+#include "shjpeg_vio.h"
 #endif
 #include "shjpeg_softhelper.h"
 
@@ -57,45 +57,45 @@ encode_hw(shjpeg_internal_t * data,
 	bool mode420 = false;
 	shjpeg_jpu_t jpeg;
 	vmap_data_t mdata;
-#if defined(HAVE_SHVEU)
-	shjpeg_veu_t veu;
+#if defined(HAVE_SHVIO)
+	shjpeg_vio_t vio;
 #endif
 
 	memset(&mdata, 0, sizeof(mdata));
-#if defined(HAVE_SHVEU)
-	memset((void*)&veu, 0, sizeof(shjpeg_veu_t));
+#if defined(HAVE_SHVIO)
+	memset((void*)&vio, 0, sizeof(shjpeg_vio_t));
 
 	D_DEBUG_AT(SH7722_JPEG, "( %p, 0x%08lx|%d [%dx%d])",
 		   data, phys, pitch, width, height);
 
-	/* Init VEU transformation control (format conversion). */
+	/* Init VIO transformation control (format conversion). */
 	if (format == SHJPEG_PF_NV12)
 		mode420 = true;
 
 	switch (format) {
 	case SHJPEG_PF_NV12:
-		veu.src.format = REN_NV12;
-		veu.src.pitch = pitch;
+		vio.src.format = REN_NV12;
+		vio.src.pitch = pitch;
 		break;
 
 	case SHJPEG_PF_NV16:
-		veu.src.format = REN_NV16;
-		veu.src.pitch = pitch;
+		vio.src.format = REN_NV16;
+		vio.src.pitch = pitch;
 		break;
 
 	case SHJPEG_PF_RGB16:
-		veu.src.format = REN_RGB565;
-		veu.src.pitch = pitch / 2;
+		vio.src.format = REN_RGB565;
+		vio.src.pitch = pitch / 2;
 		break;
 
 	case SHJPEG_PF_RGB32:
-		veu.src.format = REN_RGB32;
-		veu.src.pitch = pitch / 4;
+		vio.src.format = REN_RGB32;
+		vio.src.pitch = pitch / 4;
 		break;
 
 	case SHJPEG_PF_RGB24:
-		veu.src.format = REN_RGB24;
-		veu.src.pitch = pitch / 3;
+		vio.src.format = REN_RGB24;
+		vio.src.pitch = pitch / 3;
 		break;
 
 	case SHJPEG_PF_YCbCr:
@@ -105,7 +105,7 @@ encode_hw(shjpeg_internal_t * data,
 		D_BUG("unexpected format %d", format);
 		return -1;
 	}
-#endif /* defined(HAVE_SHVEU) */
+#endif /* defined(HAVE_SHVIO) */
 
 	D_DEBUG_AT(SH7722_JPEG, "	 -> locking JPU...");
 
@@ -209,34 +209,34 @@ encode_hw(shjpeg_internal_t * data,
 			}
 
 		}
-#if defined(HAVE_SHVEU)
+#if defined(HAVE_SHVIO)
 		else {
 			jpeg.flags |= SHJPEG_JPU_FLAG_CONVERT;
-			/* Setup VEU for conversion/scaling
+			/* Setup VIO for conversion/scaling
 			(from surface to line buffer). */
 
 			/* source */
-			veu.src.w = context->width;
-			veu.src.h = SHJPEG_JPU_LINEBUFFER_HEIGHT;
+			vio.src.w = context->width;
+			vio.src.h = SHJPEG_JPU_LINEBUFFER_HEIGHT;
 
 			/* destination */
-			veu.dst.format = REN_NV16;
-			veu.dst.w = context->width;
-			veu.dst.h = SHJPEG_JPU_LINEBUFFER_HEIGHT;
-			veu.dst.pitch = SHJPEG_JPU_LINEBUFFER_PITCH;
+			vio.dst.format = REN_NV16;
+			vio.dst.w = context->width;
+			vio.dst.h = SHJPEG_JPU_LINEBUFFER_HEIGHT;
+			vio.dst.pitch = SHJPEG_JPU_LINEBUFFER_PITCH;
 
 			/* Use valid virtual addresses to get through init */
-			veu.src.py = veu.dst.py = data->jpeg_lb1_virt;
-			veu.src.pc = veu.dst.pc = data->jpeg_lb1_virt + SHJPEG_JPU_LINEBUFFER_SIZE_Y;
-			veu.src.pa = veu.dst.pa = NULL;
+			vio.src.py = vio.dst.py = data->jpeg_lb1_virt;
+			vio.src.pc = vio.dst.pc = data->jpeg_lb1_virt + SHJPEG_JPU_LINEBUFFER_SIZE_Y;
+			vio.src.pa = vio.dst.pa = NULL;
 
-			/* set VEU */
-			shjpeg_veu_init(data, &veu);
+			/* set VIO */
+			shjpeg_vio_init(data, &vio);
 
 			/* Set the correct physical addresses */
-			shveu_set_src_phys(data->veu, jpeg.sa_y, jpeg.sa_c);
+			shvio_set_src_phys(data->vio, jpeg.sa_y, jpeg.sa_c);
 		}
-#endif /* defined(HAVE_SHVEU) */
+#endif /* defined(HAVE_SHVIO) */
 	}
 
 	/* init QT/HT */
