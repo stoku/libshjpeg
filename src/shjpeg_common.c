@@ -127,14 +127,8 @@ static int uio_init(shjpeg_context_t * context, shjpeg_internal_t * data)
 			SHJPEG_JPU_LINEBUFFER_SIZE, 1);
 	data->jpeg_lb2 = uiomux_virt_to_phys(data->uiomux, UIOMUX_JPU,
 			data->jpeg_lb2_virt);
-	// jpeg data
-	/* We can do this because UIOMux mmaps the entire memory area on
-	   device open and the memory is contiguous */
-	data->jpeg_data = data->jpeg_lb2 + SHJPEG_JPU_LINEBUFFER_SIZE;	
 
-	D_INFO ("libshjpeg: jpu_phys=%08lx(%08lx), "
-		"jpeg_phys=%08lx(%08lx)",
-		data->jpu_phys, data->jpu_size,
+	D_INFO ("libshjpeg: jpu_phys=%08lx(%08lx)",
 		data->jpeg_phys, data->jpeg_size);
 
 	return 0;
@@ -234,15 +228,12 @@ void shjpeg_shutdown(shjpeg_context_t * context)
 
 int
 shjpeg_get_frame_buffer(shjpeg_context_t * context,
-			unsigned long *phys, void **buffer, size_t * size)
+			void **buffer, size_t * size)
 {
 	if (!data.ref_count) {
 		D_ERROR("libshjpeg: not initialized yet.");
 		return -1;
 	}
-
-	if (phys)
-		*phys = data.jpeg_data;
 
 	if (buffer)
 		*buffer = (void *) data.jpeg_virt + SHJPEG_JPU_SIZE;

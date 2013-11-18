@@ -53,8 +53,6 @@ typedef struct {
 	unsigned long jpeg_lb1;	// phys addr of line buffer 1
 	unsigned long jpeg_lb2;	// phys addr of line buffer 2
 
-	unsigned long jpeg_data;	// phys addr of jpeg data
-
 	// XXX: mmio_* -> jpu_*
 	unsigned long jpu_phys;	// phys addr of JPU regs
 	volatile void *jpu_base;	// virt addr to JPU regs

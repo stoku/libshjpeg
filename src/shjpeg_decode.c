@@ -699,11 +699,11 @@ int shjpeg_decode_init(shjpeg_context_t * context)
 int
 shjpeg_decode_run(shjpeg_context_t * context,
 		  shjpeg_pixelformat format,
-		  unsigned long phys, int width, int height, int pitch)
+		  void *virt, int width, int height, int pitch)
 {
 	shjpeg_internal_t *data;
+	unsigned long phys;
 	struct my_error_mgr jerr;
-	void *addr;
 	int ret = -1;
 
 	data = (shjpeg_internal_t *) context->internal_data;
@@ -722,26 +722,20 @@ shjpeg_decode_run(shjpeg_context_t * context,
 		return -1;
 	}
 
-	/* if physical address is not given, use the default */
-	if (phys == SHJPEG_USE_DEFAULT_BUFFER) {
-		/* first of all, check if the decoded image would fit */
-		int req_size =
-		    pitch * SHJPEG_PF_PLANE_MULTIPLY(format, height);
-		int max_size = data->jpeg_size - SHJPEG_JPU_SIZE;
-
-		if (req_size > max_size) {
-			D_ERROR("libshjpeg: "
-				"no memory to hold an image of %dx%d "
-				"(%dbpp) = %d(%d)B.",
-				context->width, context->height,
-				SHJPEG_PF_BPP(format), req_size, max_size);
-			errno = -ENOMEM;
-			return -1;
-		}
-
-		phys = data->jpeg_data;
+	/* error if virtual address is not given */
+	if (!virt) {
+		D_ERROR("libshjpeg: buffer address is not given.");
+		return -1;
 	}
-	data->user_jpeg_data = phys;
+
+	data->user_jpeg_data = phys =
+		uiomux_all_virt_to_phys(virt);
+
+	/* error if the specified address cannot be converted */
+	if (!phys) {
+		D_ERROR("libshjpeg: buffer address is invalid.");
+		return -1;
+	}
 
 	context->jpeg_decomp.err = jpeg_std_error(&jerr.pub);
 	jerr.pub.error_exit = jpeglib_panic;
@@ -778,38 +772,12 @@ shjpeg_decode_run(shjpeg_context_t * context,
 	}
 
 	if ((context->libjpeg_disabled <= 0) && (ret)) {
-		int fd;
-		int len =
-		    _PAGE_ALIGN(SHJPEG_PF_PLANE_MULTIPLY(format, height)
-				* pitch) + _PAGE_SIZE;
-		void *offsetaddr;
-
-		fd = open("/dev/mem", O_RDWR | O_SYNC);
-		if (fd < 0) {
-			D_PERROR("libshjpeg: Could not open /dev/mem!");
-			return -1;
-		}
-
-		addr =
-		    mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
-			 phys & ~(_PAGE_SIZE - 1));
-		if (addr == MAP_FAILED) {
-			D_PERROR("libshjpeg: Could not map /dev/mem at"
-					"0x%08lx (length %d)!", phys, len);
-			close(fd);
-			return -1;
-		}
-
-		offsetaddr = addr + (phys & (_PAGE_SIZE - 1));
-		ret = decode_sw(context, format, offsetaddr, width,
+		ret = decode_sw(context, format, virt, width,
 				height, pitch);
 
 		// set the flag to notify the use of libjpeg
 		if (!ret)
 			context->libjpeg_used = 1;
-
-		munmap(addr, len);
-		close(fd);
 	}
 
 	return ret;

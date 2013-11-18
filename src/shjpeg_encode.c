@@ -317,9 +317,10 @@ encode_hw(shjpeg_internal_t * data,
 int
 shjpeg_encode(shjpeg_context_t * context,
 	      shjpeg_pixelformat format,
-	      unsigned long phys, int width, int height, int pitch)
+	      void *virt, int width, int height, int pitch)
 {
 	shjpeg_internal_t *data;
+	unsigned long phys;
 
 	if (!context) {
 		D_ERROR("libjpeg: invalid context passed.");
@@ -334,9 +335,13 @@ shjpeg_encode(shjpeg_context_t * context,
 		return -1;
 	}
 
-	/* if physical address is not given, use the default */
-	if (phys == SHJPEG_USE_DEFAULT_BUFFER)
-		phys = data->jpeg_data;
+	/* error if physical address is not given */
+	if (!virt) {
+		D_ERROR("libshjpeg: buffer address is not given.");
+		return -1;
+	}
+
+	phys = uiomux_virt_to_phys(data->uiomux, UIOMUX_JPU, virt);
 
 	switch (format) {
 	case SHJPEG_PF_NV12:

@@ -19,6 +19,7 @@ endif
 
 shjpegtest_SOURCES = shjpegtest.c
 shjpegtest_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS) $(SHVIO_LIBS)
+shjpegtest_CFLAGS = $(AM_CFLAGS) $(UIOMUX_CFLAGS)
 
 v2mjpeg_SOURCES = v2mjpeg.c
 v2mjpeg_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS) $(SHVIO_LIBS)
