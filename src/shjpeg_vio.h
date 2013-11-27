@@ -28,6 +28,20 @@ typedef struct {
 } shjpeg_vio_t;
 
 
+static inline ren_vid_format_t shjpeg_vio_color(shjpeg_pixelformat format)
+{
+	switch (format) {
+	case SHJPEG_PF_NV12: return REN_NV12; break;
+	case SHJPEG_PF_NV16: return REN_NV16; break;
+	case SHJPEG_PF_RGB16: return REN_RGB565; break;
+	case SHJPEG_PF_RGB32: return REN_RGB32; break;
+	case SHJPEG_PF_RGB24: return REN_RGB24;	break;
+	default: break;
+	}
+
+	return REN_UNKNOWN;
+}
+
 /* external function */
 int shjpeg_vio_init(shjpeg_internal_t * data, shjpeg_vio_t * vio);
 void shjpeg_vio_set_dst_jpu(shjpeg_internal_t *);

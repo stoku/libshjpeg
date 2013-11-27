@@ -201,6 +201,23 @@ start_vio(shjpeg_context_t * context,
 	D_INFO("libshjpeg: vio: start LB%d", data->vio_linebuf);
 
 	if (data->jpeg_encode) {
+		shjpeg_vio_t vio;
+		memset((void*)&vio, 0, sizeof(shjpeg_vio_t));
+		vio.src.w = vio.dst.w = context->width;
+		vio.src.h = vio.dst.h = SHJPEG_JPU_LINEBUFFER_HEIGHT;
+		vio.src.format = shjpeg_vio_color(context->format);
+		if (vio.src.format == REN_UNKNOWN) {
+			D_BUG("unexpected format %08x", context->format);
+			return;
+		}
+		vio.dst.format = REN_NV16;
+		vio.src.pitch = context->pitch / size_y(vio.src.format, 1, 0);
+		vio.dst.pitch = SHJPEG_JPU_LINEBUFFER_PITCH;
+		vio.src.py = vio.dst.py = data->jpeg_lb1_virt;
+		vio.src.pc = vio.dst.pc = data->jpeg_lb1_virt +
+			SHJPEG_JPU_LINEBUFFER_SIZE_Y;
+		vio.src.pa = vio.dst.pa = NULL;
+		shjpeg_vio_init(data, &vio);
 		shjpeg_vio_set_src(data, jpeg->sa_y, jpeg->sa_c);
 		shjpeg_vio_set_dst_jpu(data);
 		shjpeg_vio_start(data, 0);

@@ -57,55 +57,11 @@ encode_hw(shjpeg_internal_t * data,
 	bool mode420 = false;
 	shjpeg_jpu_t jpeg;
 	vmap_data_t mdata;
-#if defined(HAVE_SHVIO)
-	shjpeg_vio_t vio;
-#endif
-
-	memset(&mdata, 0, sizeof(mdata));
-#if defined(HAVE_SHVIO)
-	memset((void*)&vio, 0, sizeof(shjpeg_vio_t));
 
 	D_DEBUG_AT(SH7722_JPEG, "( %p, 0x%08lx|%d [%dx%d])",
 		   data, phys, pitch, width, height);
 
-	/* Init VIO transformation control (format conversion). */
-	if (format == SHJPEG_PF_NV12)
-		mode420 = true;
-
-	switch (format) {
-	case SHJPEG_PF_NV12:
-		vio.src.format = REN_NV12;
-		vio.src.pitch = pitch;
-		break;
-
-	case SHJPEG_PF_NV16:
-		vio.src.format = REN_NV16;
-		vio.src.pitch = pitch;
-		break;
-
-	case SHJPEG_PF_RGB16:
-		vio.src.format = REN_RGB565;
-		vio.src.pitch = pitch / 2;
-		break;
-
-	case SHJPEG_PF_RGB32:
-		vio.src.format = REN_RGB32;
-		vio.src.pitch = pitch / 4;
-		break;
-
-	case SHJPEG_PF_RGB24:
-		vio.src.format = REN_RGB24;
-		vio.src.pitch = pitch / 3;
-		break;
-
-	case SHJPEG_PF_YCbCr:
-		break;
-
-	default:
-		D_BUG("unexpected format %d", format);
-		return -1;
-	}
-#endif /* defined(HAVE_SHVIO) */
+	memset(&mdata, 0, sizeof(mdata));
 
 	D_DEBUG_AT(SH7722_JPEG, "	 -> locking JPU...");
 
@@ -215,29 +171,10 @@ encode_hw(shjpeg_internal_t * data,
 #if defined(HAVE_SHVIO)
 		else {
 			jpeg.flags |= SHJPEG_JPU_FLAG_CONVERT;
-			/* Setup VIO for conversion/scaling
-			(from surface to line buffer). */
-
-			/* source */
-			vio.src.w = context->width;
-			vio.src.h = SHJPEG_JPU_LINEBUFFER_HEIGHT;
-
-			/* destination */
-			vio.dst.format = REN_NV16;
-			vio.dst.w = context->width;
-			vio.dst.h = SHJPEG_JPU_LINEBUFFER_HEIGHT;
-			vio.dst.pitch = SHJPEG_JPU_LINEBUFFER_PITCH;
-
-			/* Use valid virtual addresses to get through init */
-			vio.src.py = vio.dst.py = data->jpeg_lb1_virt;
-			vio.src.pc = vio.dst.pc = data->jpeg_lb1_virt + SHJPEG_JPU_LINEBUFFER_SIZE_Y;
-			vio.src.pa = vio.dst.pa = NULL;
-
-			/* set VIO */
-			shjpeg_vio_init(data, &vio);
-
-			/* Set the correct physical addresses */
-			shvio_set_src_phys(data->vio, jpeg.sa_y, jpeg.sa_c);
+			/* save some attibutes of input image
+			   to set up the vio hardware later */
+			context->pitch = pitch;
+			context->format = format;
 		}
 #endif /* defined(HAVE_SHVIO) */
 	}

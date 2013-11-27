@@ -69,39 +69,13 @@ decode_hw(shjpeg_internal_t * data,
 		   __FUNCTION__, data, phys, pitch,
 		   context->width, context->height, format);
 
-	switch (format) {
-	case SHJPEG_PF_NV12:
-		vio.dst.format = REN_NV12;
-		vio.dst.pitch = pitch;
-		break;
-
-	case SHJPEG_PF_NV16:
-		vio.dst.format = REN_NV16;
-		vio.dst.pitch = pitch;
-		break;
-
-	case SHJPEG_PF_RGB16:
-		vio.dst.format = REN_RGB565;
-		vio.dst.pitch = pitch / 2;
-		break;
-
-	case SHJPEG_PF_RGB32:
-		vio.dst.format = REN_RGB32;
-		vio.dst.pitch = pitch / 4;
-		break;
-
-	case SHJPEG_PF_RGB24:
-		vio.dst.format = REN_RGB24;
-		vio.dst.pitch = pitch / 3;
-		break;
-
-	case SHJPEG_PF_YCbCr:
-		break;
-
-	default:
+	vio.dst.format = shjpeg_vio_color(format);
+	if ((vio.dst.format == REN_UNKNOWN) &&
+	    (format != SHJPEG_PF_YCbCr)) {
 		D_BUG("unexpected format %08x", format);
 		return -1;
 	}
+	vio.dst.pitch = pitch / size_y(vio.dst.format, 1, 0);
 #else
 	if ((context->mode420 && format != SHJPEG_PF_NV12) ||
 	    (!context->mode420 && format != SHJPEG_PF_NV16)) {
