@@ -95,6 +95,12 @@ if test "x${ac_enable_vio}" = xyes ; then
 	PKG_CHECK_MODULES(SHVIO, shvio >= 1.7.0, HAVE_SHVIO=yes, HAVE_SHVIO=no)
 	if test "x$HAVE_SHVIO" = "xyes" ; then
 		AC_DEFINE(HAVE_SHVIO, [1], [Define to 1 if you have SHVIO])
+		AC_ARG_WITH([vio-name],
+			[AS_HELP_STRING([--with-vio-name=<name>],
+					[name to identify an appropriate uio device for libshvio [default=VEU]])],
+			[SHVIO_NAME=$withval], [SHVIO_NAME="VEU"])
+		AC_DEFINE_UNQUOTED(SHVIO_UIO_NAME, "$SHVIO_NAME",
+			[Specify name to identify an appropriate UIO device for libshvio])
 	fi
 fi
 AM_CONDITIONAL(HAVE_SHVIO, [test "x$HAVE_SHVIO" = "xyes"])

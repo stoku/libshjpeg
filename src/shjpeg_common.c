@@ -76,7 +76,8 @@ static int uio_init(shjpeg_context_t * context, shjpeg_internal_t * data)
 
 #if defined(HAVE_SHVIO)
 	/* Open VIO */
-	if ((data->vio = shvio_open()) == 0) {
+	data->vio = shvio_open_named(SHVIO_UIO_NAME);
+	if (!data->vio) {
 		D_ERROR("libshjpeg: Cannot open VIO!");
 		return -1;
 	}
