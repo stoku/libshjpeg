@@ -26,7 +26,6 @@
 #include <getopt.h>
 #include <sys/mman.h>
 
-#include <uiomux/uiomux.h>
 #include <shjpeg/shjpeg.h>
 
 /* for BMP bitmap */
@@ -274,9 +273,6 @@ main(int argc, char *argv[])
     int			   disable_libjpeg = 0;
     int			   quiet = 0;
     int			   error = 0;
-    UIOMux		  *uiomux;
-    const char		  *uio_name[2] = {"JPU", NULL};
-#define UIOMUX_JPU	(1 << 0)
 
     argv0 = argv[0];
 
@@ -418,13 +414,8 @@ main(int argc, char *argv[])
     pitch  = SHJPEG_PF_PITCH_MULTIPLY(format) * context->width;
 
     /* allocate memory for output buffer */
-    uiomux = uiomux_open_named(uio_name);
-    if (!uiomux) {
-	fprintf(stderr, "Cannot open JPU UIO device\n");
-	return 1;
-    }
-    jpeg_size = pitch * context->height * bpp / 8;
-    jpeg_virt = uiomux_malloc(uiomux, UIOMUX_JPU, jpeg_size, 1);
+    jpeg_virt = shjpeg_malloc(context, format, context->width,
+			      context->height, pitch, &jpeg_size);
 
     /* start decoding */
     if (shjpeg_decode_run(context, format, jpeg_virt,
@@ -473,7 +464,7 @@ main(int argc, char *argv[])
     }
     close(fd);
 
-    uiomux_free(uiomux, UIOMUX_JPU, jpeg_virt, jpeg_size);
+    shjpeg_free(context, jpeg_virt, jpeg_size);
 
     shjpeg_shutdown(context);
 

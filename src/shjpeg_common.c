@@ -142,6 +142,40 @@ static int uio_init(shjpeg_context_t * context, shjpeg_internal_t * data)
 }
 
 /*
+ * allocate UIO memory for output buffer
+ */
+void *
+shjpeg_malloc(shjpeg_context_t * context,
+	      shjpeg_pixelformat format,
+	      int width, int height, int pitch,
+	      size_t *allocated_size)
+{
+	shjpeg_internal_t *data;
+	void *vaddr;
+	int req_size = pitch * SHJPEG_PF_PLANE_MULTIPLY(format, height);
+
+	data = context->internal_data;
+	vaddr = uiomux_malloc(data->uiomux, UIOMUX_JPU, req_size, 8);
+	if (*allocated_size)
+		*allocated_size = req_size;
+
+	return vaddr;
+}
+
+/*
+ * allocate UIO memory for output buffer
+ */
+void
+shjpeg_free(shjpeg_context_t * context,
+	    void *vaddr, size_t size)
+{
+	shjpeg_internal_t *data;
+
+	data = context->internal_data;
+	uiomux_free(data->uiomux, UIOMUX_JPU, vaddr, size);
+}
+
+/*
  * Main routines
  */
 

@@ -19,7 +19,6 @@ endif
 
 shjpegtest_SOURCES = shjpegtest.c
 shjpegtest_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS) $(SHVIO_LIBS)
-shjpegtest_CFLAGS = $(AM_CFLAGS) $(UIOMUX_CFLAGS)
 
 v2mjpeg_SOURCES = v2mjpeg.c
 v2mjpeg_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS) $(SHVIO_LIBS)
@@ -29,7 +28,6 @@ libjpegtest_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS) $(SHVIO_LIBS)
 
 shjpeg_multithread_SOURCES = shjpeg_multithread.c
 shjpeg_multithread_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS) $(SHVIO_LIBS)
-shjpeg_multithread_CFLAGS = $(AM_CFLAGS) $(UIOMUX_CFLAGS)
 
 libjpeg_multithread_SOURCES = libjpeg_thread.c
 libjpeg_multithread_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS) $(SHVIO_LIBS)

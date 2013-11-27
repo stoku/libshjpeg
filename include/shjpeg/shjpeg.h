@@ -74,6 +74,56 @@ shjpeg_context_t *shjpeg_init(int verbose);
 void shjpeg_shutdown(shjpeg_context_t *context);
 
 /**
+ * \brief Allocate memory for output buffer.
+ *
+ * Allocate memory. This could be called only after
+ * shjpeg_decode_init() is called.
+ *
+ * \param context [in] a pointer to the JPEG image context to be
+ *        decoded. Pass the value set by shjpeg_open().
+ *
+ * \param format [in] desired pixelformat of the decoded image.
+ *
+ * \param width [in] width of the destination frame buffer.
+ *
+ * \param height [in] height of the destination frame buffer.
+ *
+ * \param pitch [in] pitch of the frame buffer.
+ *
+ * \retval 0 success
+ * \retval -1 failed
+ *
+ * \sa shjpeg_decode_init().
+ */
+void *shjpeg_malloc(shjpeg_context_t	*context,
+		    shjpeg_pixelformat	 format,
+		    int			 width,
+		    int			 height,
+		    int			 pitch,
+		    size_t		*allocated_size);
+
+/**
+ * \brief Release memory of output buffer.
+ *
+ * Release memory of specified buffer.
+ *
+ * \param context [in] a pointer to the JPEG image context to be
+ *        decoded. Pass the value set by shjpeg_open().
+ *
+ * \param address [in] address of the buffer.
+ *
+ * \param size [in] size of the buffer.
+ *
+ * \retval 0 success
+ * \retval -1 failed
+ *
+ * \sa shjpeg_decode_init().
+ */
+void shjpeg_free(shjpeg_context_t	*context,
+		 void			*address,
+		 size_t			 size);
+
+/**
  * \brief Get frame buffer information.
  *
  * Kernel allocated contiguous memory that could be used to place
