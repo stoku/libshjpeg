@@ -19,12 +19,14 @@ endif
 
 shjpegtest_SOURCES = shjpegtest.c
 shjpegtest_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS) $(SHVIO_LIBS)
+shjpegtest_LDFLAGS = -static
 
 v2mjpeg_SOURCES = v2mjpeg.c
 v2mjpeg_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS) $(SHVIO_LIBS)
 
 libjpegtest_SOURCES = libjpeg_test.c
 libjpegtest_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS) $(SHVIO_LIBS)
+libjpegtest_LDFLAGS = -static
 
 shjpeg_multithread_SOURCES = shjpeg_multithread.c
 shjpeg_multithread_LDADD = ../src/libshjpeg.la $(UIOMUX_LIBS) $(SHVIO_LIBS)

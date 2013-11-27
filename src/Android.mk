@@ -19,6 +19,12 @@ LOCAL_SHARED_LIBRARIES := libcutils \
 			libjpeg \
 			libuiomux
 
+ifeq ($(JPU_DECODE_USE_VIO), true)
+	LOCAL_CFLAGS += -DHAVE_SHVIO=1 -DSHVIO_UIO_NAME=\"VIO\"
+	LOCAL_C_INCLUDES += hardware/renesas/shmobile/libshvio/include
+	LOCAL_SHARED_LIBRARIES += libshvio
+endif
+
 LOCAL_MODULE:= libshjpeg
 LOCAL_PRELINK_MODULE:= false
 LOCAL_MODULE_TAGS:= optional
