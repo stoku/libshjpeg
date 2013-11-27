@@ -181,7 +181,7 @@ int decode_jpeg(char *buffer, int pattern, int cnt) {
 	context->width = IMG_WIDTH;
 	context->height = IMG_HEIGHT;
 	format = SHJPEG_PF_RGB16;
-	pitch  = (SHJPEG_PF_PITCH_MULTIPLY(format) * context->width + 7) & ~7;
+	pitch  = SHJPEG_PF_PITCH_MULTIPLY(format) * context->width;
 
 	encode_phys = uiomux_virt_to_phys(uiomux, UIOMUX_JPU, encode_buffer);
 	decode_phys = uiomux_virt_to_phys(uiomux, UIOMUX_JPU, decode_result);

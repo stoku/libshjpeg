@@ -150,8 +150,10 @@ encode_hw(shjpeg_internal_t * data,
 	shjpeg_jpu_setreg32(data, JPU_JIFEDA2,
 			    data->jpeg_phys + SHJPEG_JPU_RELOAD_SIZE);
 	shjpeg_jpu_setreg32(data, JPU_JIFEDRSZ, SHJPEG_JPU_RELOAD_SIZE);
-	shjpeg_jpu_setreg32(data, JPU_JIFESHSZ, width);
-	shjpeg_jpu_setreg32(data, JPU_JIFESVSZ, height);
+	shjpeg_jpu_setreg32(data, JPU_JIFESHSZ,
+			    ((u32)width + 3) & 0x00000ffc);
+	shjpeg_jpu_setreg32(data, JPU_JIFESVSZ,
+			    ((u32)height + 3) & 0x00000ffc);
 
 	if (format == SHJPEG_PF_NV12 || format == SHJPEG_PF_NV16) {
 		/* Setup JPU for encoding in frame mode (directly from surface). */
@@ -166,7 +168,8 @@ encode_hw(shjpeg_internal_t * data,
 		shjpeg_jpu_setreg32(data, JPU_JIFESYA1, phys);
 		shjpeg_jpu_setreg32(data, JPU_JIFESCA1,
 				    phys + pitch * height);
-		shjpeg_jpu_setreg32(data, JPU_JIFESMW, pitch);
+		shjpeg_jpu_setreg32(data, JPU_JIFESMW,
+				    ((u32)pitch + 7) & 0x0ff8);
 	} else {
 		jpeg.height = height;
 

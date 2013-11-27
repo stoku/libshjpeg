@@ -460,7 +460,7 @@ main(int argc, char *argv[])
 	default:
 	    format = !context->mode420 ? SHJPEG_PF_NV16 : SHJPEG_PF_NV12;
 	}
-    pitch  = (SHJPEG_PF_PITCH_MULTIPLY(format) * context->width + 7) & ~7;
+    pitch  = SHJPEG_PF_PITCH_MULTIPLY(format) * context->width;
 
     /* start decoding */
     if (shjpeg_decode_run(context, format, phys,

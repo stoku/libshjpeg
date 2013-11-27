@@ -165,7 +165,8 @@ decode_hw(shjpeg_internal_t * data,
 	shjpeg_jpu_setreg32(data, JPU_JIFDSA1, data->jpeg_phys);
 	shjpeg_jpu_setreg32(data, JPU_JIFDSA2,
 			    data->jpeg_phys + SHJPEG_JPU_RELOAD_SIZE);
-	shjpeg_jpu_setreg32(data, JPU_JIFDDRSZ, len & 0x00FFFF00);
+	shjpeg_jpu_setreg32(data, JPU_JIFDDRSZ,
+			    ((u32)len + 255) & 0x00ffff00);
 
 	if ((context->mode420 && format == SHJPEG_PF_NV12) ||
 	    (!context->mode420 && format == SHJPEG_PF_NV16)) {
@@ -181,7 +182,8 @@ decode_hw(shjpeg_internal_t * data,
 		shjpeg_jpu_setreg32(data, JPU_JIFDDYA1, phys);
 		shjpeg_jpu_setreg32(data, JPU_JIFDDCA1,
 				    phys + pitch * height);
-		shjpeg_jpu_setreg32(data, JPU_JIFDDMW, pitch);
+		shjpeg_jpu_setreg32(data, JPU_JIFDDMW,
+				    ((u32)pitch + 7) & ~0x07);
 	} else {
 		/* Setup JPU for decoding in line buffer mode. */
 		shjpeg_jpu_setreg32(data, JPU_JINTE,
@@ -715,8 +717,7 @@ shjpeg_decode_run(shjpeg_context_t * context,
 	/* check if we got a large enough surface */
 	if ((context->width > width) ||
 	    (context->height > height) ||
-	    ((context->width * (SHJPEG_PF_PITCH_MULTIPLY(format))) > pitch)
-	    || (pitch & 0x7)) {
+	    ((context->width * (SHJPEG_PF_PITCH_MULTIPLY(format))) > pitch)) {
 		D_ERROR("libshjpeg: width, height or pitch doesn't fit.");
 		return -1;
 	}
