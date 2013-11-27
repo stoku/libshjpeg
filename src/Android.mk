@@ -12,10 +12,12 @@ LOCAL_SRC_FILES:= \
 
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../include \
-			external/jpeg
+			external/jpeg \
+			external/libuiomux/include
 
 LOCAL_SHARED_LIBRARIES := libcutils \
-			  libjpeg
+			libjpeg \
+			libuiomux
 
 LOCAL_MODULE:= libshjpeg
 LOCAL_PRELINK_MODULE:= false
