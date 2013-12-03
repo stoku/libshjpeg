@@ -210,7 +210,6 @@ boolean shjpeg_start_decompress(j_decompress_ptr cinfo)
 	context->width = cinfo->output_width;
 	context->height = cinfo->output_height;
 	context->pitch = context->width * cinfo->out_color_components;
-	context->pitch = (context->pitch + 7) & ~7;	// 8 byte align
 	data = context->internal_data;
 
 	ctx->hardware_buf.bufsize = context->pitch * context->height;
@@ -374,7 +373,6 @@ void shjpeg_start_compress(j_compress_ptr cinfo, boolean write_all_tables)
 	context->width = cinfo->image_width;
 	context->height = cinfo->image_height;
 	context->pitch = context->width * cinfo->input_components;
-	context->pitch = (context->pitch + 7) & ~7;	// 8 byte align
 	data = context->internal_data;
 
 	ctx->hardware_buf.bufsize = context->pitch * context->height;
