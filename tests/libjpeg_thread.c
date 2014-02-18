@@ -236,9 +236,7 @@ int
 main(int argc, char *argv[])
 {
     char		  *input1, *input2;
-    char		  *dumpfn = NULL;
     int			   verbose = 0;
-    int			   dump = 0;
     int			   quiet = 0;
     int			   count = 50;
     char		   *argv0 = NULL;
@@ -255,7 +253,6 @@ main(int argc, char *argv[])
 	    {"help", 0, 0, 'h'},
 	    {"verbose", 0, 0, 'v'},
 	    {"quiet", 0, 0, 'q'},
-	    {"dump", 2, 0, 'd'},
 	    {"mem", 0, 0, 'm'},
 	    {"stdio", 0, 0, 's'},
 	    {"yuv", 0, 0, 'y'},
@@ -263,7 +260,7 @@ main(int argc, char *argv[])
 	    {0, 0, 0, 0}
 	};
 
-	if ((c = getopt_long(argc, argv, "hvd::qmsyc:",
+	if ((c = getopt_long(argc, argv, "hvqmsyc:",
 			     long_options, &option_index)) == -1)
 	    break;
 
@@ -274,12 +271,6 @@ main(int argc, char *argv[])
 
 	case 'v':
 	    verbose = 1;
-	    break;
-
-	case 'd':
-	    dump = 1;
-	    if (optarg)
-		dumpfn = optarg;
 	    break;
 
 	case 'c':

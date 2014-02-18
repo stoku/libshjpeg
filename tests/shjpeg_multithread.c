@@ -116,7 +116,7 @@ void write_framebuffer(void *fb_buffer,
 
 	copy_height = height > fb_vinfo.yres ? fb_vinfo.yres : height;
 	copy_width = width > (fb_vinfo.xres / 2) ? (fb_vinfo.xres / 2): width;
-	for (i = 0; i < height; i++) {
+	for (i = 0; i < copy_height; i++) {
 		memcpy(fb_buffer, data_buf, copy_width *
 					fb_vinfo.bits_per_pixel / 8);
 		fb_buffer += fb_info.line_length;
@@ -254,7 +254,6 @@ int
 main(int argc, char *argv[])
 {
     int			   count = -1;
-    int			   quiet = 0;
     struct decode_data     decode_inst1, decode_inst2;
     pthread_t		   tid1, tid2;
     void		  *fb_buffer;
@@ -267,12 +266,11 @@ main(int argc, char *argv[])
 	int c, option_index = 0;
 	static struct option   long_options[] = {
 	    {"help", 0, 0, 'h'},
-	    {"quiet", 0, 0, 'q'},
 	    {"count", 1, 0, 'c'},
 	    {0, 0, 0, 0}
 	};
 
-	if ((c = getopt_long(argc, argv, "hc:q",
+	if ((c = getopt_long(argc, argv, "hc:",
 			     long_options, &option_index)) == -1)
 	    break;
 
@@ -283,10 +281,6 @@ main(int argc, char *argv[])
 
 	case 'c':
 	    count =  strtol(optarg, NULL, 0);
-	    break;
-
-	case 'q':
-	    quiet = 1;
 	    break;
 
 	default:

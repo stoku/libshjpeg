@@ -88,7 +88,7 @@ void write_bmp(const char *filename, int bpp,
 	       unsigned long phys, int pitch, int width, int height)
 {
     bmp_header_t bmp_header;
-    int h, w, bw, size, raw_size, stride;
+    int h, w, size, raw_size, stride;
     void *mem, *ptr;
     FILE *file;
     char *buffer = NULL, tmp;
@@ -155,7 +155,6 @@ void write_bmp(const char *filename, int bpp,
     fwrite(&bmp_header, 1, sizeof(bmp_header), file);
 
     /* Write data */
-    bw = bpp >> 3;
 //    mem += (height - 1) * pitch;
     ptr = mem;
     for (h = 0; h < height; h++) {
